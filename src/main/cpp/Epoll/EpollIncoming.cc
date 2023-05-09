@@ -3,14 +3,17 @@
 //
 #include "EpollConnection.hh"
 #include "EpollIncoming.hh"
-#include <unistd.h>
+#include "Config.hh"
+#include <sys/epoll.h>
 
 
-EpollIncoming::EpollIncoming(int t_fd, EpollInstance *inst, MessageQueue<int> *inq) {
+EpollIncoming::EpollIncoming(EpollInstance *inst, MessageQueue<int> *inq) {
 
-	this->t_fd = t_fd;
 	this->inst = inst;
 	this->inqueue = inq;
+	this->set_fd(inq->get_fd());
+	this->set_events(EPOLLIN);
+
 
 }
 
@@ -20,6 +23,12 @@ EpollIncoming::~EpollIncoming(){
 
 bool EpollIncoming::handleEvent(uint32_t events){
 
+#if DEBUG == true
+	printf("Thread %d received a new connection\n", this->get_fd());
+	fflush(stdout);
+#endif
+	uint64_t tmp;
+	read(this->get_fd(), &tmp, sizeof(tmp));
 	int rec;
 
 	if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {

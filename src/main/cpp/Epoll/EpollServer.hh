@@ -29,13 +29,14 @@ class EpollServer : public EpollEntry {
 
 		int acceptConnection();
 		bool writeToThread(int fd);
-		void voidThread();
+		//void voidThread();
 
 
 public:
-		EpollServer(uint16_t port, int nth, int *threads);
+		EpollServer(uint16_t port, int nth, MessageQueue<int> **threads);
 		~EpollServer();
 		bool handleEvent(uint32_t events);
+
 
 
 };

@@ -27,7 +27,7 @@ typedef struct conn{
 
 
 class EpollConnection : public EpollEntry{
-		int cfd;
+		conn_t *c;
 public:
 		EpollConnection(conn_t *cfd);
 		~EpollConnection();

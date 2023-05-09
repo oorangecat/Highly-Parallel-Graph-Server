@@ -22,12 +22,11 @@
 
 
 class EpollIncoming : public EpollEntry {
-		int t_fd;
 		EpollInstance *inst;
 		MessageQueue<int> *inqueue;
 
 public:
-		EpollIncoming(int t_fd, EpollInstance *inst, MessageQueue<int> *inq);
+		EpollIncoming(EpollInstance *inst, MessageQueue<int> *inq);
 		~EpollIncoming();
 		bool handleEvent(uint32_t events);
 

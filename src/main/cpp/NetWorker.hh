@@ -7,9 +7,9 @@
 
 #include <vector>
 #include "Epoll/EpollInstance.hh"
-#include "EpollConnection.hh"
+#include "Epoll/EpollConnection.hh"
 #include "Epoll/EpollIncoming.hh"
-#include "MessageQueue/MessageQueue.hh"
+#include "Epoll/MessageQueue/MessageQueue.hh"
 
 using namespace std;
 
@@ -18,10 +18,9 @@ class NetWorker {
 	MessageQueue<int> *inQueue;
 	EpollInstance epollInstance;
 
-	int tfd;
 
 public:
-		NetWorker(int thread_fd, MessageQueue<int> *inq);
+		NetWorker(MessageQueue<int> *inq);
 		~NetWorker();
 
 

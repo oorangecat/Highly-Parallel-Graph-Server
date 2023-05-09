@@ -3,12 +3,12 @@
 //
 
 #include "NetWorker.hh"
+#include "Config.hh"
 
 
 
-NetWorker::NetWorker(int thread_fd, MessageQueue<int> *inq) {
+NetWorker::NetWorker(MessageQueue<int> *inq) {
 
-	this->tfd = thread_fd;
 	this->inQueue = inq;
 
 }
@@ -16,8 +16,13 @@ NetWorker::NetWorker(int thread_fd, MessageQueue<int> *inq) {
 
 
 void NetWorker::threadMain() {
+
+#if DEBUG == true
+	printf("Started new thread %d\n", this->inQueue->get_fd());
+#endif
+
 	EpollInstance ep;
-	EpollIncoming einc(this->tfd, &ep);
+	EpollIncoming einc(&ep, this->inQueue);
 
 	ep.registerEpollEntry(einc);
 

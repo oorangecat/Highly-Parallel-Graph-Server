@@ -1,6 +1,7 @@
 //
 // Created by marco on 07/05/2023.
 //
+#include "Config.hh"
 
 #include "EpollServer.hh"
 #include "EpollConnection.hh"
@@ -10,12 +11,16 @@
 #include <cstring>
 #include <unistd.h>
 #include <iostream>
+#include "../Config.hh"
 
 
 
-EpollServer::EpollServer(uint16_t port, int nth, int *threads) {
+EpollServer::EpollServer(uint16_t port, int nth, MessageQueue<int> **threads) {
+#if DEBUG == true
+	std::cout << "Creating Server.." << std::endl;
+#endif
 	this->port = port;
-	this->threads_fd = threads;
+	this->thqueues = threads;
 	this->nthreads = nth;
 
 	memset(&saddr, 0, sizeof(saddr));
@@ -28,12 +33,14 @@ EpollServer::EpollServer(uint16_t port, int nth, int *threads) {
 	flags |= O_NONBLOCK;
 	fcntl(sfd, F_SETFL, flags);
 
+
 	int reuse = 1;
 	if (setsockopt(this->sfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
 		throw std::runtime_error(
 						std::string("setsockopt for SO_REUSEADDR: ") + std::strerror(errno));
 		exit(1);
 	}
+
 
 	if(bind(this->sfd, (struct sockaddr *) &saddr, sizeof(saddr)) < 0 ){
 		throw std::runtime_error(
@@ -43,11 +50,16 @@ EpollServer::EpollServer(uint16_t port, int nth, int *threads) {
 
 	int ret = listen(this->sfd, SOMAXCONN);
 
+
 	if(ret<0){
 		throw std::runtime_error(
 						std::string("listen connection: ") + std::strerror(errno));
 		exit(1);
 	}
+
+	this->set_fd(this->sfd);
+	this->set_events(EPOLLIN);
+
 }
 
 
@@ -81,6 +93,8 @@ int EpollServer::acceptConnection(){
 
 bool EpollServer::handleEvent(uint32_t events) {
 
+
+
 		if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {
 			return false;
 		} else {
@@ -89,7 +103,7 @@ bool EpollServer::handleEvent(uint32_t events) {
 
 			if(newConn != NULL){
 
-
+				writeToThread(newConn);
 				/*if(!writeToThread(newConn)){			//PIPES approach discarded
 					voidThread();
 				}*/
@@ -100,6 +114,12 @@ bool EpollServer::handleEvent(uint32_t events) {
 				exit(1);
 			}
 	}
+
+#if DEBUG == true
+	printf("Adding new connection\n");
+	fflush(stdout);
+#endif
+
 	return true;
 }
 

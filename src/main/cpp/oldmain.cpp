@@ -32,14 +32,13 @@ void processProtobuf(tcp::iostream& stream){
 
 
     // Parse data
-    Request req;
     if (!req.ParseFromArray(buffer.data(), messageSize)) {
         // Parse error
         cout << "Parsing Data error" << endl;
         return;
     }
 		cout << "Req size: "<<req.ByteSizeLong();
-    /*esw::PResults results;
+    esw::PResults results;
     for (auto ds=datasets.datasets().begin(); ds!=datasets.datasets().end(); ++ds){
         esw::PResult* result = results.add_results();
 

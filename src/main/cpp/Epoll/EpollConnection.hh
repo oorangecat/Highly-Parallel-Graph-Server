@@ -11,11 +11,11 @@
 #ifndef SERVER_EPOLLCONNECTION_HH
 #define SERVER_EPOLLCONNECTION_HH
 
+#include "../Config.hh"
 #include "EpollEntry.hh"
+#include "../proto/locations.pb.h"
 #include <vector>
 
-
-//TODO How will the response be received from the graph worker?
 
 
 typedef struct conn{
@@ -25,9 +25,11 @@ typedef struct conn{
 }conn_t;
 
 
-
 class EpollConnection : public EpollEntry{
 		conn_t *c;
+
+		Request parseProtobuf(char *buff, int count);
+
 public:
 		EpollConnection(conn_t *cfd);
 		~EpollConnection();

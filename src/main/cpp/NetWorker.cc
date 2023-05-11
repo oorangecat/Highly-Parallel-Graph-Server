@@ -35,7 +35,6 @@ void NetWorker::threadMain() {
 }
 
 /*
- * TODO Implement Protobuf reading in EpollConnection
  * TODO Implement routes for messages
  * TODO Implement GRAPH data structure and walk-location handling
  * TODO Implement all GRAPH logic into graph handler

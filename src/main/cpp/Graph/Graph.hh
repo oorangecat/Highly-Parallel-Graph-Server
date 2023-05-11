@@ -4,16 +4,27 @@
 
 #ifndef SERVER_GRAPH_HH
 #define SERVER_GRAPH_HH
-#include "Walk.hh"
-#include "Location.hh"
+#include "Edge.hh"
+#include "Node.hh"
+#include "PointMap.hh"
 #include "../Config.hh"
 
-using rtree = boostg::index::rtree<Location, boostg::index::quadratic<RTREENODES>>;
+
 
 class Graph {
-		rtree locTree;
+		PointMap pointmap;
+
+public:
+		Graph() = default;
+		void addWalk(Edge newWalk);
+		void addWalkVector(std::vector<Edge> walks);
+		void addLocation(Node *nnode);
+		uint32_t closestDistance(Node *loc);
+
+		Node* closestPoint(Node *p);
 
 };
+
 
 
 #endif //SERVER_GRAPH_HH

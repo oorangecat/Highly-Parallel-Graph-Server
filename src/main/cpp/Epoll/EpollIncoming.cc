@@ -24,7 +24,7 @@ EpollIncoming::~EpollIncoming(){
 bool EpollIncoming::handleEvent(uint32_t events){
 
 #if DEBUG == true
-	printf("Thread %d received a new connection\n", this->get_fd());
+	printf("NetThread %d received a new connection\n", this->get_fd());
 	fflush(stdout);
 #endif
 	uint64_t tmp;

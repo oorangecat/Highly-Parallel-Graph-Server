@@ -1,16 +1,20 @@
-
+#include "Graph/Edge.hh"
+#include "Graph/Graph.hh"
+#include "Graph/Node.hh"
 #include "Epoll/EpollServer.hh"
 #include "Epoll/EpollInstance.hh"
 #include "Epoll/MessageQueue/MessageQueue.hh"
 #include "NetWorker.hh"
 #include "Config.hh"
 
+
+
 #include <thread>
 #include <vector>
 
 int main(int argc, char *argv[]) {
 
-
+#if GRAPHDEBUG == false
 
 	MessageQueue<int> *netQueues[NETTHREADS];
 	NetWorker *netw[NETTHREADS];
@@ -38,7 +42,28 @@ int main(int argc, char *argv[]) {
 	}
 
 	cout<<"hi";
+#elif GRAPHDEBUG == true
+	Graph graph;
+	Node n1(503, 401);
+	Node n2(703, 443);
+	Node n3(532, 111);
+	Node n4(11111, 22222);
 
+	graph.addLocation(&n1);
+	graph.addLocation(&n2);
+	graph.addLocation(&n3);
+	graph.addLocation(&n4);
+
+	Node n5(11112, 22224);
+	Node n6(505, 440);
+	Node n7(799, 500);
+	Node n8(1, 1);
+
+	cout<<"Dist: "<<graph.closestDistance(&n5)<< " "<<graph.closestDistance(&n6)<<" "<<graph.closestDistance(&n7)
+	<<" "<<graph.closestDistance(&n8)<<endl;
+	cout<<n6.distance(&n1)<<" "<<n6.distance(&n2)<<" "<<n6.distance(&n3)<<" "<<n6.distance(&n4)<<endl;
+	cout<<n6.hash()<<" "<<n2.hash();
+#endif
 
 }
 

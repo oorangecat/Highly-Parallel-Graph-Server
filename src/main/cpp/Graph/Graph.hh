@@ -4,13 +4,14 @@
 
 #ifndef SERVER_GRAPH_HH
 #define SERVER_GRAPH_HH
+
 #include "Edge.hh"
 #include "Node.hh"
 #include "PointMap.hh"
 #include "../Config.hh"
 
 
-
+//TODO implement graph parallelism via RCU in Graph class
 class Graph {
 		PointMap pointmap;
 

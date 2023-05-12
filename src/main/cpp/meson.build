@@ -6,8 +6,9 @@ boost_dep = dependency('boost')
 
 
 srcs = ['main.cpp', 'proto/locations.pb.cc','Epoll/MessageQueue/MessageQueue.hh', 'Epoll/EpollConnection.cc',
-           'Epoll/EpollIncoming.cc', 'Epoll/EpollInstance.cc', 'Epoll/EpollServer.cc',
-           'Epoll/EpollEntry.cc', 'Graph/Graph.cc', 'Graph/Edge.cc', 'Graph/Node.cc', 'Graph/PointMap.cc', 'NetWorker.cc']
+           'Epoll/EpollIncoming.cc', 'Epoll/EpollInstance.cc', 'Epoll/EpollServer.cc', 'Epoll/EpollGraphMessage.cc',
+           'Epoll/EpollEntry.cc', 'Graph/Graph.cc', 'Graph/Edge.cc', 'Graph/Node.cc', 'Graph/PointMap.cc', 'Graph/Message.hh',
+            'NetWorker.cc', 'GraphWorker.cc']
 
 executable('server', srcs,
   dependencies: [thread_dep, boost_dep, jsoncpp_dep, protobuf_dep]

@@ -7,10 +7,11 @@
 #include <sys/epoll.h>
 
 
-EpollIncoming::EpollIncoming(EpollInstance *inst, MessageQueue<int> *inq) {
+EpollIncoming::EpollIncoming(EpollInstance *inst, MessageQueue<int> *inq, MessageQueue<Message*> *outq) {
 
 	this->inst = inst;
 	this->inqueue = inq;
+	this->outqueue = outq;
 	this->set_fd(inq->get_fd());
 	this->set_events(EPOLLIN);
 
@@ -29,7 +30,7 @@ bool EpollIncoming::handleEvent(uint32_t events){
 #endif
 	uint64_t tmp;
 	read(this->get_fd(), &tmp, sizeof(tmp));
-	int rec;
+	int *rec;
 
 	if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {
 		return false;
@@ -38,13 +39,14 @@ bool EpollIncoming::handleEvent(uint32_t events){
 
 		rec = this->inqueue->pop();		//TODO check performance, includes blocking op for mutex
 
-		conn_t newconn;
-		newconn.cfd = rec;
+		if(rec!=nullptr) {
+			conn_t *newconn = new conn_t;
+			newconn->cfd = *rec;
 
-		EpollConnection *newepconn = new EpollConnection(&newconn);
+			EpollConnection *newepconn = new EpollConnection(newconn, this->outqueue);
 
-		this->inst->registerEpollEntry(*newepconn);			//Registers new connection in the thread poll
-
+			this->inst->registerEpollEntry(*newepconn);      //Registers new connection in the thread poll
+		}
 	}
 	return true;
 };

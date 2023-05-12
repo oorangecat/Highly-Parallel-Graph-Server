@@ -7,9 +7,10 @@
 
 
 
-NetWorker::NetWorker(MessageQueue<int> *inq) {
+NetWorker::NetWorker(MessageQueue<int> *inq, MessageQueue<Message*> *graphq) {
 
 	this->inQueue = inq;
+	this->graphQueue = graphq;
 
 }
 
@@ -18,11 +19,11 @@ NetWorker::NetWorker(MessageQueue<int> *inq) {
 void NetWorker::threadMain() {
 
 #if DEBUG == true
-	printf("Started new thread %d\n", this->inQueue->get_fd());
+	printf("Started new netthread %d\n", this->inQueue->get_fd());
 #endif
 
 	EpollInstance ep;
-	EpollIncoming einc(&ep, this->inQueue);
+	EpollIncoming einc(&ep, this->inQueue, graphQueue);
 
 	ep.registerEpollEntry(einc);
 
@@ -34,8 +35,3 @@ void NetWorker::threadMain() {
 
 }
 
-/*
- * TODO Implement routes for messages
- * TODO Implement GRAPH data structure and walk-location handling
- * TODO Implement all GRAPH logic into graph handler
- */

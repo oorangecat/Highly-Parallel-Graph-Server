@@ -8,16 +8,18 @@
 #include "Graph/Edge.hh"
 #include "Epoll/EpollInstance.hh"
 #include "Epoll/MessageQueue/MessageQueue.hh"
+#include "Epoll/EpollGraphMessage.hh"
 
 #include <vector>
 #include "Graph/Message.hh"
 
 class GraphWorker {
 
-		MessageQueue<Message> *inQueue;
+		MessageQueue<Message*> *inQueue;
 		EpollInstance epollInstance;
 
 public:
+		GraphWorker(MessageQueue<Message*> *inq) { this->inQueue = inq;};
 
 		void threadMain();
 

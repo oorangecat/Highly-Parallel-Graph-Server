@@ -14,6 +14,7 @@
 #include <sys/eventfd.h>
 #include <cstring>
 #include <unistd.h>
+#include "../../Config.hh"
 
 template<class T>
 class MessageQueue {
@@ -34,19 +35,29 @@ public:
 		}
 
 		void push(T msg){
+#if DEBUG == true
+			printf("Queue %d: Pushed %ld bytes of data\n",this->efd, sizeof(msg));
+			fflush(stdout);
+#endif
 			this->mut.lock();
 			this->mqueue.push(msg);
 			this->mut.unlock();
 			uint64_t ev = EPOLLIN;
 			write(this->efd, &ev, sizeof(ev));		//signals available data to epoll
+
 		}
 
 
-		T pop(){
+		T* pop(){
 
+			T* ret;
 			this->mut.lock();
-			T ret = this->mqueue.front();
-			this->mqueue.pop();
+			if(this->mqueue.empty()){
+				ret = nullptr;
+			} else {
+				ret = &(this->mqueue.front());
+				this->mqueue.pop();
+			}
 			this->mut.unlock();
 			return ret;
 		}

@@ -13,25 +13,32 @@
 
 #include "../Config.hh"
 #include "EpollEntry.hh"
+#include "../Graph/Message.hh"
+#include "../Graph/Node.hh"
+#include "../Graph/Edge.hh"
+#include "MessageQueue/MessageQueue.hh"
+
 #include "../proto/locations.pb.h"
+
 #include <vector>
 
 
 
 typedef struct conn{
 		int cfd;
-		std::vector<char> buffer;		//TODO replace with new incoming walks
+		std::vector<Edge> buffer;
 		int len = 0;
 }conn_t;
 
 
 class EpollConnection : public EpollEntry{
-		conn_t *c;
+		conn_t *cnn;
+		MessageQueue<Message*> *outq;
 
 		Request parseProtobuf(char *buff, int count);
 
 public:
-		EpollConnection(conn_t *cfd);
+		EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue);
 		~EpollConnection();
 		bool handleEvent(uint32_t events);
 

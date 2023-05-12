@@ -6,7 +6,8 @@
 #include "Epoll/MessageQueue/MessageQueue.hh"
 #include "NetWorker.hh"
 #include "Config.hh"
-
+#include "Graph/Message.hh"
+#include "GraphWorker.hh"
 
 
 #include <thread>
@@ -17,13 +18,27 @@ int main(int argc, char *argv[]) {
 #if GRAPHDEBUG == false
 
 	MessageQueue<int> *netQueues[NETTHREADS];
+	MessageQueue<Message*> *graphQueue = new MessageQueue<Message*>();
 	NetWorker *netw[NETTHREADS];
+	GraphWorker *graphw[GRAPHTTREADS];
+
 	vector<std::thread*> netth;
+	vector<std::thread*> graphth;
+
 	EpollInstance epoll;
 	std::thread *tmp;
+
+
+	for(int i=0; i<GRAPHTTREADS; i++){
+		graphw[i] = new GraphWorker(graphQueue);
+		tmp = new std::thread(&GraphWorker::threadMain, graphw[i]);
+		graphth.push_back(tmp);
+	}
+
+
 	for(int i=0; i<NETTHREADS; i++){
 		netQueues[i] = new MessageQueue<int>();
-		netw[i] = new NetWorker(netQueues[i]);
+		netw[i] = new NetWorker(netQueues[i], graphQueue);
 		tmp = new std::thread(&NetWorker::threadMain, netw[i]);
 		netth.push_back(tmp);
 	}

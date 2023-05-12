@@ -3,7 +3,7 @@
 
 #define RTREENODES 16
 #define DEBUG true
-#define GRAPHDEBUG true
+#define GRAPHDEBUG false
 
 #define GRIDWIDTH 433
 

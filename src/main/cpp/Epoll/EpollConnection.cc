@@ -10,7 +10,7 @@
 #include <arpa/inet.h>
 #include <vector>
 
-std::vector<Edge> parseEdges(Request req);
+std::vector<Edge*> parseEdges(Request req);
 std::vector<Node> parseMany(Request req);
 
 
@@ -71,7 +71,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				fflush(stdout);
 #endif
 
-				std::vector<Edge> edges = parseEdges(req);
+				std::vector<Edge*> edges = parseEdges(req);
 				for(auto e:edges)
 					this->cnn->buffer.push_back(e);
 
@@ -86,7 +86,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				OneToOne msg = req.onetoone();
 				Node *s = new Node(msg.origin().x(), msg.origin().y());									//TODO check memory leak
 				Node *e = new Node(msg.destination().x(), msg.destination().y());
-				std::vector<Edge> buff(this->cnn->buffer);
+				std::vector<Edge*> buff(this->cnn->buffer);
 
 				Message *graphmsg = new Message(buff, s, e);
 
@@ -110,21 +110,21 @@ bool EpollConnection::handleEvent(uint32_t events) {
 }
 
 
-std::vector<Edge> parseEdges(Request req){
+std::vector<Edge*> parseEdges(Request req){
 
 
 	Walk walk = req.walk();
 	int n = walk.locations_size();
-	std::vector<Edge> res;
+	std::vector<Edge*> res;
 
 	Location loc1, loc2;
 
 	for(int i = 0; i < n-1; i++) {
 		loc1 = walk.locations(i);
 		loc2 = walk.locations(i+1);
-		Node a(loc1.x(), loc1.y());
-		Node b(loc2.x(), loc2.y());
-		Edge e(&a,&b,walk.lengths(i));
+		Node *a = new Node(loc1.x(), loc1.y());
+		Node *b = new Node(loc2.x(), loc2.y());
+		Edge *e = new Edge(a,b,walk.lengths(i));			//TODO check memory leak
 		res.push_back(e);
 	}
 

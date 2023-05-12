@@ -17,6 +17,8 @@ int main(int argc, char *argv[]) {
 
 #if GRAPHDEBUG == false
 
+	Graph *graph = new Graph();
+
 	MessageQueue<int> *netQueues[NETTHREADS];
 	MessageQueue<Message*> *graphQueue = new MessageQueue<Message*>();
 	NetWorker *netw[NETTHREADS];
@@ -30,7 +32,7 @@ int main(int argc, char *argv[]) {
 
 
 	for(int i=0; i<GRAPHTTREADS; i++){
-		graphw[i] = new GraphWorker(graphQueue);
+		graphw[i] = new GraphWorker(graphQueue, graph);
 		tmp = new std::thread(&GraphWorker::threadMain, graphw[i]);
 		graphth.push_back(tmp);
 	}
@@ -55,8 +57,9 @@ int main(int argc, char *argv[]) {
 	for(auto t = netth.begin(); t!=netth.end(); ++t){
 		(*t)->join();
 	}
-
+	delete(graph);
 	cout<<"hi";
+
 #elif GRAPHDEBUG == true
 	Graph graph;
 	Node n1(503, 401);

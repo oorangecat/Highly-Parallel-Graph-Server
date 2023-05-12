@@ -6,20 +6,22 @@
 
 
 PointMap::PointMap(){
-
+	this->map = new std::unordered_map<int64_t, Node* >();
 }
 
-Node *PointMap::addPoint(Node *point){
-	auto vec = map.find(point->hash());
 
-	if(vec != map.end()){
+
+Node *PointMap::addPoint(Node *point){
+	auto vec = map->find(point->hash());
+
+	if(vec != map->end()){
 		return vec->second;
 	}
 	//One entry for each Node cluster
-	this->map.insert(std::make_pair(point->hash(), point));
+	this->map->insert(std::make_pair(point->hash(), point));
 
 	this->ssize++;
-
+	return point;
 }
 
 void PointMap::addPoint(int32_t x, int32_t y){
@@ -28,9 +30,9 @@ void PointMap::addPoint(int32_t x, int32_t y){
 }
 
 Node* PointMap::closestPoint(Node *point){
-	auto vec = map.find(point->hash());
+	auto vec = map->find(point->hash());
 
-	if(vec != map.end()) {
+	if(vec != map->end()) {
 		return vec->second;
 	}	else {
 		return point;

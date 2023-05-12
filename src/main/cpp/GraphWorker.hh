@@ -9,17 +9,24 @@
 #include "Epoll/EpollInstance.hh"
 #include "Epoll/MessageQueue/MessageQueue.hh"
 #include "Epoll/EpollGraphMessage.hh"
+#include "Graph/Message.hh"
+#include "Graph/Graph.hh"		//includes URCU lib
 
 #include <vector>
-#include "Graph/Message.hh"
+
+
 
 class GraphWorker {
 
 		MessageQueue<Message*> *inQueue;
 		EpollInstance epollInstance;
+		Graph *graph;
 
 public:
-		GraphWorker(MessageQueue<Message*> *inq) { this->inQueue = inq;};
+		GraphWorker(MessageQueue<Message*> *inq, Graph *g) {
+			this->inQueue = inq;
+			this->graph = g;
+		};
 
 		void threadMain();
 

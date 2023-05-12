@@ -26,7 +26,7 @@
 
 typedef struct conn{
 		int cfd;
-		std::vector<Edge> buffer;
+		std::vector<Edge*> buffer;
 		int len = 0;
 }conn_t;
 

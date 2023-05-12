@@ -4,14 +4,17 @@
 
 #include "EpollGraphMessage.hh"
 //TODO implement graph parallelism via RCU in Worker
+/*
+ * Threads are registered for RCU in GraphWorker
+ */
 
-
-EpollGraphMessage::EpollGraphMessage(EpollInstance *inst, MessageQueue<Message*> *inq) {
+EpollGraphMessage::EpollGraphMessage(EpollInstance *inst, MessageQueue<Message*> *inq, Graph *g) {
 
 	this->inst = inst;
 	this->inqueue = inq;
 	this->set_fd(inq->get_fd());
 	this->set_events(EPOLLIN);
+	this->graph = g;
 
 }
 
@@ -41,6 +44,10 @@ bool EpollGraphMessage::handleEvent(uint32_t events){
 			printf(" Message type: %c\n", rec->isToMany() ? 'm':'s');
 			fflush(stdout);
 #endif
+			std::vector<Edge*> walks = rec->getWalks();
+			if(walks.size()>0){
+				this->graph->addWalkVector(walks);
+			}
 
 			delete(*tmp);
 

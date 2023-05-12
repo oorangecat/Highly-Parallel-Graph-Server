@@ -11,8 +11,10 @@ void GraphWorker::threadMain() {
 	printf("Started new graphthread %d\n", this->inQueue->get_fd());
 #endif
 
+	urcu_qsbr_register_thread();		//Register thread for reading
+	urcu_qsbr_quiescent_state();		//Declare current quiescent state
 	EpollInstance ep;
-	EpollGraphMessage einc(&ep, this->inQueue);
+	EpollGraphMessage einc(&ep, this->inQueue, this->graph);
 
 	ep.registerEpollEntry(einc);
 
@@ -20,6 +22,6 @@ void GraphWorker::threadMain() {
 		ep.waitAndHandleEvents();
 	}
 
-
+	urcu_qsbr_unregister_thread();
 
 }

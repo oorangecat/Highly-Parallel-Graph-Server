@@ -11,14 +11,17 @@
 
 class PointMap {
 
-		std::unordered_map<int64_t, Node* > map;
+		std::unordered_map<int64_t, Node* > *map;
 		int ssize=0;
 public:
 		PointMap();
+		~PointMap(){ delete (map);} ;
+		PointMap(std::unordered_map<int64_t, Node* > *smap) { this->map = smap;};
 		Node *addPoint(Node *point);
 
 		void addPoint(int32_t x, int32_t y);
-
+		//void swapMap(std::unordered_map<int64_t, Node*> *newmap){delete(this->map); this->map=newmap;	};
+		std::unordered_map<int64_t, Node* >* getMap(){ return this->map;};
 		Node* closestPoint(Node *point);
 		Node* closestPoint(int32_t x, int32_t y);
 

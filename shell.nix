@@ -10,5 +10,6 @@ mkShell {
 		maven
         protobuf
         avro-cpp
+        liburcu
 	];
 }

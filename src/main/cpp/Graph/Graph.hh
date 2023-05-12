@@ -5,6 +5,14 @@
 #ifndef SERVER_GRAPH_HH
 #define SERVER_GRAPH_HH
 
+#include <urcu/urcu-qsbr.h>
+#include <mutex>
+/*
+ * Graph data structure
+ * Read protected by RCU
+ * Concurrent write avoided by mutex
+ */
+
 #include "Edge.hh"
 #include "Node.hh"
 #include "PointMap.hh"
@@ -13,12 +21,13 @@
 
 //TODO implement graph parallelism via RCU in Graph class
 class Graph {
-		PointMap pointmap;
+		PointMap *pointmap;
+		std::mutex writelock;
 
 public:
-		Graph() = default;
-		void addWalk(Edge newWalk);
-		void addWalkVector(std::vector<Edge> walks);
+		Graph() { this->pointmap = new PointMap(); };
+		void addWalkUnsync(Edge newWalk);
+		void addWalkVector(std::vector<Edge*> walks);
 		void addLocation(Node *nnode);
 		uint32_t closestDistance(Node *loc);
 

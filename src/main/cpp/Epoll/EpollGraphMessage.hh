@@ -13,18 +13,20 @@
 #include "EpollEntry.hh"
 #include "EpollInstance.hh"
 #include "../Graph/Message.hh"
+#include "../Graph/Graph.hh"
 #include "MessageQueue/MessageQueue.hh"
 
 class EpollGraphMessage : public EpollEntry  {
 		EpollInstance *inst;
 		MessageQueue<Message*> *inqueue;
+		Graph *graph;
 
 #if DEBUG==true
 		int id = rand() % 100;			//Random id to distinguish threads in logs
 #endif
 
 public:
-		EpollGraphMessage(EpollInstance *inst, MessageQueue<Message*> *inq);
+		EpollGraphMessage(EpollInstance *inst, MessageQueue<Message*> *inq, Graph *g);
 		~EpollGraphMessage();
 		bool handleEvent(uint32_t events);
 };

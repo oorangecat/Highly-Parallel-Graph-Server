@@ -16,31 +16,31 @@
 class Message {
 		bool RESET = false;
 
-		std::vector<Edge> walks;
+		std::vector<Edge*> walks;
 		Node *source;
 		std::vector<Node*> dest;
 public:
-		Message(std::vector<Edge> walks, Node *source, std::vector<Node*> dest){
+		Message(std::vector<Edge*> walks, Node *source, std::vector<Node*> dest){
 			this->walks=walks; this->source=source; this->dest=dest;
 		}
 
-		Message(std::vector<Edge> walks, Node *source, std::vector<Node*> dest, bool res){
+		Message(std::vector<Edge*> walks, Node *source, std::vector<Node*> dest, bool res){
 			this->walks=walks; this->source=source; this->dest=dest;
 			this->RESET=res;
 		}
 
 		Message() = default;
 
-		Message(std::vector<Edge> walks, Node *source, Node* dest){
+		Message(std::vector<Edge*> walks, Node *source, Node* dest){
 			this->walks=walks; this->source=source, this->dest.push_back(dest);
 		}
 
 
 
 
-			std::vector<Edge> getWalks(){ return this->walks;};
+			std::vector<Edge*> getWalks(){ return this->walks;};
 		std::vector<Node*> getDest(){ return this->dest;};
-		void addWalk(Edge e) { this->walks.push_back(e);};
+		void addWalk(Edge* e) { this->walks.push_back(e);};
 		void addDest(Node* n) { this->dest.push_back(n);};
 		void setSource(Node* n) {this->source = n;};
 		Node* getSource(){ return this->source;};

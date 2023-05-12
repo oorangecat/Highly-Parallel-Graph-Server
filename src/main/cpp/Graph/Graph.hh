@@ -24,6 +24,10 @@ public:
 
 		Node* closestPoint(Node *p);
 
+		uint64_t shortestToOne(Node *source, Node *dest);
+		uint64_t shortestToAll(Node *source);
+
+
 };
 
 

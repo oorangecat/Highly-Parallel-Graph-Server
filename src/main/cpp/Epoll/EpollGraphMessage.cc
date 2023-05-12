@@ -42,9 +42,10 @@ bool EpollGraphMessage::handleEvent(uint32_t events){
 			fflush(stdout);
 #endif
 
+			delete(*tmp);
+
 		}
 
-		//TODO delete Message obj after usage
 
 
 	}

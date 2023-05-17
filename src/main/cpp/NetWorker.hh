@@ -9,6 +9,7 @@
 #include "Epoll/EpollInstance.hh"
 #include "Epoll/EpollConnection.hh"
 #include "Epoll/EpollIncoming.hh"
+#include "Epoll/EpollResult.hh"
 #include "Epoll/MessageQueue/MessageQueue.hh"
 #include "Graph/Message.hh"
 #include "Graph/Result.hh"

@@ -6,10 +6,13 @@
 #define SERVER_EPOLLRESULT_HH
 
 #include <sys/epoll.h>
+#include <arpa/inet.h>
+
 #include "EpollEntry.hh"
 #include "MessageQueue/MessageQueue.hh"
 #include "../Graph/Message.hh"
 #include "../Graph/Result.hh"
+#include "../proto/locations.pb.h"
 
 
 class EpollResult : public EpollEntry {

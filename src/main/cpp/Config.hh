@@ -4,6 +4,8 @@
 #define RTREENODES 16
 #define DEBUG true
 #define GRAPHDEBUG false
+#define TOONEDEBUG false
+#define TOALLDEBUG true
 #define USERCU false
 
 #define GRIDWIDTH 869		//500mm radius

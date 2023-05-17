@@ -44,6 +44,9 @@ class Graph {
 		pthread_rwlock_t rwlock;
 #endif
 
+		uint64_t sumPath(std::unordered_map<Node*, Node*> *parent, Node* source, Node* dest);
+		uint64_t sumMap(std::unordered_map<Node*,uint32_t> *map);
+
 public:
 		Graph() {
 			this->pointmap = new PointMap();
@@ -62,7 +65,7 @@ public:
 
 		uint64_t shortestToOne(Node *source, Node *dest);
 		uint64_t shortestToAll(Node *source);
-		uint64_t sumPath(std::unordered_map<Node*, Node*> *parent, Node* source, Node* dest);
+
 
 
 

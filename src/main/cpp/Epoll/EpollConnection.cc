@@ -89,7 +89,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				Node *e = new Node(msg.destination().x(), msg.destination().y());
 				std::vector<Edge*> buff(this->cnn->buffer);
 
-				Message *graphmsg = new Message(this->cnn->cfd, buff, s, e, this->retq);
+				Message *graphmsg = new Message(this->cnn->cfd, buff, s, e, this->retq);		//TODO check delete
 
 				this->cnn->buffer.clear();			//clears Edge cache as they are sent to graphworker
 
@@ -102,6 +102,15 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				printf("Received one-to-all on connection %d\n", this->cnn->cfd);
 				fflush(stdout);
 #endif
+				OneToAll msg = req.onetoall();
+				Node *s = new Node(msg.origin().x(), msg.origin().y());
+				std::vector<Edge*> buff(this->cnn->buffer);
+
+				Message *graphmsg = new Message(this->cnn->cfd, buff, s, this->retq);
+				this->cnn->buffer.clear();
+
+				outq->push(graphmsg);
+
 				return true;
 
 			} else

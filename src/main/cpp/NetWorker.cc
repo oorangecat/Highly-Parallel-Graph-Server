@@ -25,8 +25,10 @@ void NetWorker::threadMain() {
 
 	EpollInstance ep;
 	EpollIncoming einc(&ep, this->inQueue, graphQueue, retQueue);
+	EpollResult eres(this->retQueue);
 
 	ep.registerEpollEntry(einc);
+	ep.registerEpollEntry(eres);
 
 	while (1) {
 		ep.waitAndHandleEvents();

@@ -11,6 +11,8 @@
 
 class Node;		//circular dependency
 
+
+
 class Edge {
 		Node *a, *b;
 		uint32_t dist;
@@ -27,7 +29,13 @@ public:
 
 		Node *getA(){ return this->a; };
 		Node *getB(){ return this->b; };
+		void setA(Node* n){ this->a=n; };
+		void setB(Node* n){ this->b=n; };
 
+		//For usage in PriorityQueue
+		bool operator<(const Edge other) const {
+			return this->dist > other.dist;
+		}
 
 };
 

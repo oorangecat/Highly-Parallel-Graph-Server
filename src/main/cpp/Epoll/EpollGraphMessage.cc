@@ -40,10 +40,12 @@ bool EpollGraphMessage::handleEvent(uint32_t events){
 		Result *res = new Result();
 		if(tmp!=nullptr){			//if thread manages to get the message first
 			Message *rec = *tmp;
+
 #if DEBUG == true
-			printf(" Message type: %c\n", rec->isToMany() ? 'm':'s');
+			printf("Message type: %c on connection %d\n", rec->isToMany() ? 'm':'s', rec->get_cfd());
 			fflush(stdout);
 #endif
+
 			std::vector<Edge*> walks = rec->getWalks();
 			if(walks.size()>0){
 				this->graph->addWalkVector(walks);
@@ -58,14 +60,15 @@ bool EpollGraphMessage::handleEvent(uint32_t events){
 				} else {
 					res->setStatus(true);
 					res->setShortest(mindist);
-					res->setMessage(rec);
 				}
 			} else {														//ONE-TO-ALL route
-				uint64_t totdist = 0;//this->graph->shortestToAll(rec->getSource());
+				Node *source = this->graph->addPoint(rec->getSource());
+				uint64_t totdist = this->graph->shortestToAll(source);
 				res->setTotLen(totdist);
-				res->setMessage(rec);
 				res->setStatus(true);
 			}
+			res->setMessage(rec);
+
 
 			rec->getResQueue()->push(res);			//send message back to netWorker
 			//delete(*tmp);				//DELETE moved in EpollResult

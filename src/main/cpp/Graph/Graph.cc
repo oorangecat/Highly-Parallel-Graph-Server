@@ -60,11 +60,13 @@ void Graph::addWalkVector(std::vector<Edge*> walks) {
 #elif USERCU == false
 	pthread_rwlock_wrlock(&(this->rwlock));
 
-	Node *res;
+	Node *a, *b;
 	for(auto el : walks) {
-		res =	this->pointmap->addPoint(el->getA());				//TODO edges may be added to in-use nodes!
-		this->pointmap->addPoint(el->getB());
-		res->addEdge(el);
+		a =	this->pointmap->addPoint(el->getA());
+		b = this->pointmap->addPoint(el->getB());
+		el->setA(a);
+		el->setB(b);
+		a->addEdge(el);
 	}
 
 	pthread_rwlock_unlock(&(this->rwlock));
@@ -131,7 +133,7 @@ uint64_t Graph::shortestToOne(Node *source, Node *dest){
 	while(!open_set.empty()){				//while something still to evaluate
 		currentw = open_set.top();					//extract top element of the list
 
-#if DEBUG==true
+#if TOONEDEBUG==true
 
 		printf( "SHORTEST| Current node: %ld | Edge length: %d\n", currentw->node->hash(), currentw->node->getEdges()->size() );
 		fflush(stdout);
@@ -158,7 +160,7 @@ uint64_t Graph::shortestToOne(Node *source, Node *dest){
 		for (  auto pair : *edgelist ) {
 
 			e = pair.second;
-#if DEBUG==true
+#if TOONEDEBUG==true
 			printf("Evaluating edge %ld:%ld cost: %ld\n", e->getA()->hash(), e->getB()->hash(), e->getDist());
 			fflush(stdout);
 #endif
@@ -177,15 +179,94 @@ uint64_t Graph::shortestToOne(Node *source, Node *dest){
 	pthread_rwlock_unlock(&(this->rwlock));
 #endif
 
-	//TODO there is an error in hashing!
 
-#if DEBUG==true
+#if TOONEDEBUG==true
 	std::cout<<"shortest_path_ONETOONE "<< source->hash() << " : "<< dest->hash() << " = " << ret << std::endl;
 #endif
 
 	return ret;
 }
 
+
+//TODO find segmentation
+uint64_t Graph::shortestToAll(Node *source){
+#if USERCU==true
+	rcu_read_lock_qsbr(); 			//Read lock for copying old map
+#elif USERCU == false
+	pthread_rwlock_rdlock( &( this->rwlock ) );			//readlock on Graph
+#endif
+#if TOALLDEBUG==true
+	std::cout<<"to-all-source: "<<source<<std::endl;
+#endif
+	std::unordered_map<Node*, uint32_t> currentNodes;	//for node distances
+	std::priority_queue<Edge*> nextEdges;
+
+	currentNodes.insert(std::make_pair(source, 0));
+
+	std::unordered_map<uint64_t, Edge*> *edges = source->getEdges();
+	Edge *e;
+	Node *a, *b;
+
+	for(auto p : *edges){
+		nextEdges.push(p.second);
+	}
+
+	while (!nextEdges.empty()){
+		e = nextEdges.top();
+		nextEdges.pop();
+		a = e->getA(); b = e->getB();
+#if TOALLDEBUG==true
+		std::cout<<"to-all-source-parsed: "<<a<<std::endl;
+#endif
+		auto res = currentNodes.find(b);
+		auto adist = currentNodes.find(a);
+
+		if(adist==currentNodes.end()){
+#if TOALLDEBUG==true
+			printf("Error in graph, source not found\n"); fflush(stdout);
+#endif
+			continue;											//TODO throw error, graph broken
+		}
+
+		if(res == currentNodes.end()){			//if destination is not yet in the map, add it
+			currentNodes.insert(std::make_pair(b, adist->second + e->getDist()));
+			edges = b->getEdges();
+			for(auto e: *edges)
+				nextEdges.push(e.second);		//add all its edges
+
+		} else {											//if we already have it in the map
+			if(res->second > adist->second + e->getDist()){
+				currentNodes.insert(std::make_pair(b, adist->second + e->getDist()));
+				edges = b->getEdges();
+
+				for(auto e: *edges)
+					nextEdges.push(e.second);
+
+			} else {													//Minimal edge did not improve anything
+				continue;
+			}
+		}
+	}
+#if USERCU==true
+	urcu_qsbr_read_unlock();
+	urcu_qsbr_quiescent_state();
+#elif USERCU==false
+	pthread_rwlock_unlock(&(this->rwlock));
+#endif
+
+#if TOALLDEBUG == true
+	uint64_t result = sumMap(&currentNodes);
+	printf("shortest_path_ONETOALL %ld : %ld\n", source->hash(), result);
+	fflush(stdout);
+	return result;
+#elif  TOALLDEBUG == false
+	return sumMap(&currentNodes);
+
+#endif
+
+
+
+}
 
 
 uint64_t Graph::sumPath(std::unordered_map<Node*, Node*> *parent, Node* source, Node* dest){
@@ -216,6 +297,13 @@ uint64_t Graph::sumPath(std::unordered_map<Node*, Node*> *parent, Node* source, 
 
 }
 
+uint64_t Graph::sumMap(std::unordered_map<Node*,uint32_t> *map){
+	uint64_t sum=0;
+	for(auto e:*map){
+		sum+=e.second;
+	}
+	return sum;
+}
 
 Node* Graph::addPoint(Node *p){
 	return this->pointmap->addPoint(p);

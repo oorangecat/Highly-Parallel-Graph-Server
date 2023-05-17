@@ -27,24 +27,32 @@ class Message {
 
 public:
 		Message(int cfd, std::vector<Edge*> walks, Node *source, std::vector<Node*> dest,	MessageQueue<Result*> *retq ){
-			this->walks=walks; this->source=source; this->dest=dest; this->retqueue=retq;
+			this->walks = walks; this->source = source; this->dest = dest; this->retqueue = retq;
 		}
 
 		Message(int cfd, std::vector<Edge*> walks, Node *source, std::vector<Node*> dest, 	MessageQueue<Result*> *retq, bool res){
-			this->walks=walks; this->source=source; this->dest=dest; this->retqueue=retq;
-			this->RESET=res;
+			this->walks = walks; this->source = source; this->dest = dest; this->retqueue = retq;
+			this->RESET = res;this->cfd = cfd;
 		}
 
 		Message() = default;
 
+		Message(int cfd, std::vector<Edge*> walks, Node *source, 	MessageQueue<Result*> *retq) {
+			this->cfd = cfd; this->walks = walks; this->source = source; this->retqueue = retq;
+		}
+
+		Message(int cfd, bool res) {
+			this->cfd = cfd;this->RESET = res;
+		}
+
+
 		Message(int cfd, std::vector<Edge*> walks, Node *source, Node* dest, 	MessageQueue<Result*> *retq){
-			this->walks=walks; this->source=source, this->dest.push_back(dest); this->retqueue=retq;
+			this->cfd = cfd; this->walks=walks; this->source=source, this->dest.push_back(dest); this->retqueue=retq;
 		}
 
 
 
-
-			std::vector<Edge*> getWalks(){ return this->walks;};
+		std::vector<Edge*> getWalks(){ return this->walks;};
 		std::vector<Node*> getDest(){ return this->dest;};
 		void addWalk(Edge* e) { this->walks.push_back(e);};
 		void addDest(Node* n) { this->dest.push_back(n);};

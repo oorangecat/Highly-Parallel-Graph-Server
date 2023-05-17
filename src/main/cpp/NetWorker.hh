@@ -11,6 +11,7 @@
 #include "Epoll/EpollIncoming.hh"
 #include "Epoll/MessageQueue/MessageQueue.hh"
 #include "Graph/Message.hh"
+#include "Graph/Result.hh"
 using namespace std;
 
 class NetWorker {
@@ -19,7 +20,7 @@ class NetWorker {
 	EpollInstance epollInstance;
 
 	MessageQueue<Message*> *graphQueue;
-
+	MessageQueue<Result*> *retQueue;
 public:
 		NetWorker(MessageQueue<int> *inq, MessageQueue<Message*> *graphQueue);
 		~NetWorker();

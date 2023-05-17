@@ -7,11 +7,12 @@
 #include <sys/epoll.h>
 
 
-EpollIncoming::EpollIncoming(EpollInstance *inst, MessageQueue<int> *inq, MessageQueue<Message*> *outq) {
+EpollIncoming::EpollIncoming(EpollInstance *inst, MessageQueue<int> *inq, MessageQueue<Message*> *outq, MessageQueue<Result*> *retq) {
 
 	this->inst = inst;
 	this->inqueue = inq;
 	this->outqueue = outq;
+	this->retqueue = retq;
 	this->set_fd(inq->get_fd());
 	this->set_events(EPOLLIN);
 
@@ -43,7 +44,7 @@ bool EpollIncoming::handleEvent(uint32_t events){
 			conn_t *newconn = new conn_t;
 			newconn->cfd = *rec;
 
-			EpollConnection *newepconn = new EpollConnection(newconn, this->outqueue);
+			EpollConnection *newepconn = new EpollConnection(newconn, this->outqueue, this->retqueue);
 
 			this->inst->registerEpollEntry(*newepconn);      //Registers new connection in the thread poll
 		}

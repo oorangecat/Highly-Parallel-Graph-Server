@@ -37,7 +37,7 @@ bool EpollGraphMessage::handleEvent(uint32_t events){
 	} else {
 
 		Message **tmp = this->inqueue->pop();
-
+		Result *res = new Result();
 		if(tmp!=nullptr){			//if thread manages to get the message first
 			Message *rec = *tmp;
 #if DEBUG == true
@@ -49,8 +49,26 @@ bool EpollGraphMessage::handleEvent(uint32_t events){
 				this->graph->addWalkVector(walks);
 			}
 
-			delete(*tmp);
+			if( !rec->isToMany() ) {          //ONE-TO-ONE route
+				Node *source = this->graph->addPoint(rec->getSource());
+				Node *dest = this->graph->addPoint(rec->getDest().front());
+				uint64_t mindist = this->graph->shortestToOne(source, dest);
+				if(mindist==-1){
+					res->setStatus(false);
+				} else {
+					res->setStatus(true);
+					res->setShortest(mindist);
+					res->setMessage(rec);
+				}
+			} else {														//ONE-TO-ALL route
+				uint64_t totdist = 0;//this->graph->shortestToAll(rec->getSource());
+				res->setTotLen(totdist);
+				res->setMessage(rec);
+				res->setStatus(true);
+			}
 
+			rec->getResQueue()->push(res);			//send message back to netWorker
+			//delete(*tmp);				//DELETE moved in EpollResult
 		}
 
 

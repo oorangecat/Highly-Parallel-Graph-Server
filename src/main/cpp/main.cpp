@@ -9,6 +9,10 @@
 #include "Graph/Message.hh"
 #include "GraphWorker.hh"
 
+/*
+ * TODO Implement cache
+ * TODO implement ProtoBuf answer
+ */
 
 #include <thread>
 #include <vector>

@@ -26,9 +26,10 @@ class EpollIncoming : public EpollEntry {
 		EpollInstance *inst;
 		MessageQueue<int> *inqueue;
 		MessageQueue<Message*> *outqueue;
+		MessageQueue<Result*> *retqueue;
 
 public:
-		EpollIncoming(EpollInstance *inst, MessageQueue<int> *inq, MessageQueue<Message*> *outq);
+		EpollIncoming(EpollInstance *inst, MessageQueue<int> *inq, MessageQueue<Message*> *outq, MessageQueue<Result*> *retq);
 		~EpollIncoming();
 		bool handleEvent(uint32_t events);
 

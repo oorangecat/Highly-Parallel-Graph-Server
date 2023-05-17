@@ -17,7 +17,7 @@
 #include "../Graph/Node.hh"
 #include "../Graph/Edge.hh"
 #include "MessageQueue/MessageQueue.hh"
-
+#include "../Graph/Result.hh"
 #include "../proto/locations.pb.h"
 
 #include <vector>
@@ -34,11 +34,11 @@ typedef struct conn{
 class EpollConnection : public EpollEntry{
 		conn_t *cnn;
 		MessageQueue<Message*> *outq;
-
+		MessageQueue<Result*> *retq;
 		Request parseProtobuf(char *buff, int count);
 
 public:
-		EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue);
+		EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue, MessageQueue<Result*> *retqueue);
 		~EpollConnection();
 		bool handleEvent(uint32_t events);
 

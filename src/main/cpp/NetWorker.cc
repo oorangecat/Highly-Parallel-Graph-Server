@@ -11,6 +11,7 @@ NetWorker::NetWorker(MessageQueue<int> *inq, MessageQueue<Message*> *graphq) {
 
 	this->inQueue = inq;
 	this->graphQueue = graphq;
+	this->retQueue = new MessageQueue<Result*>();
 
 }
 
@@ -23,7 +24,7 @@ void NetWorker::threadMain() {
 #endif
 
 	EpollInstance ep;
-	EpollIncoming einc(&ep, this->inQueue, graphQueue);
+	EpollIncoming einc(&ep, this->inQueue, graphQueue, retQueue);
 
 	ep.registerEpollEntry(einc);
 

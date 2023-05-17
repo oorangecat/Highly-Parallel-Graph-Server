@@ -11,28 +11,36 @@
 
 #include <unordered_map>
 
+
 class Node {
 		int32_t x,y;
-		int64_t chash = -1;
+		uint64_t chash = 0;
 
 		//<hash_destination, edge>
-		std::unordered_map<int64_t, Edge*> edges;
+		std::unordered_map<uint64_t, Edge*> *edges;
 
 public:
 
-		Node() = default;
-		Node(int32_t x, int32_t y) { this->x=x; this->y=y; };
+		Node() { this->edges = new std::unordered_map<uint64_t, Edge*>;};
+		Node(int32_t x, int32_t y) { this->x=x; this->y=y;  this->edges = new std::unordered_map<uint64_t, Edge*>;};
 
 		void set_p(int32_t x, int32_t y);
 
-		int32_t distance(int32_t x, int32_t y);
+		//TODO [mm] precision, might be improved with fp result (worth it?)
+		uint32_t distance(uint32_t x, uint32_t y);
 		int32_t distance(Node *other);
-		void addEdge(Edge *w);
 
-		int64_t hash();
+		int32_t edgeDist(Node *other);
+
+		void addEdge(Edge *w);
+		std::unordered_map<uint64_t, Edge*> *getEdges( ) { return this->edges; };
+
+		uint64_t hash();
 
 
 };
+
+
 
 
 #endif //SERVER_NODE_HH

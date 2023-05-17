@@ -14,9 +14,10 @@ std::vector<Edge*> parseEdges(Request req);
 std::vector<Node> parseMany(Request req);
 
 
-EpollConnection::EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue) {
+EpollConnection::EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue, MessageQueue<Result*> *retqueue) {
 	this->cnn = cfd;
 	this->outq = outqueue;
+	this->retq = retqueue;
 	this->set_fd(this->cnn->cfd);
 	this->set_events(EPOLLIN);
 }
@@ -88,7 +89,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				Node *e = new Node(msg.destination().x(), msg.destination().y());
 				std::vector<Edge*> buff(this->cnn->buffer);
 
-				Message *graphmsg = new Message(buff, s, e);
+				Message *graphmsg = new Message(this->cnn->cfd, buff, s, e, this->retq);
 
 				this->cnn->buffer.clear();			//clears Edge cache as they are sent to graphworker
 

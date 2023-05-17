@@ -12,7 +12,7 @@ PointMap::PointMap(){
 
 
 Node *PointMap::addPoint(Node *point){
-	auto vec = map->find(point->hash());
+	auto vec = map->find( point->hash() );
 
 	if(vec != map->end()){
 		return vec->second;

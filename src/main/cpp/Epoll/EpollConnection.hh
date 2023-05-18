@@ -35,7 +35,7 @@ class EpollConnection : public EpollEntry{
 		conn_t *cnn;
 		MessageQueue<Message*> *outq;
 		MessageQueue<Result*> *retq;
-		Request parseProtobuf(char *buff, int count);
+		Request parseProtobuf(std::vector<char> *buff, int count);
 
 public:
 		EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue, MessageQueue<Result*> *retqueue);

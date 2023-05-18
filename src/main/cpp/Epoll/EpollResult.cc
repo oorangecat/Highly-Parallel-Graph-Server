@@ -63,18 +63,13 @@ bool EpollResult::handleEvent(uint32_t events) {
 			if(!(*res)->getStatus()){
 				response.set_status(Response_Status_ERROR);
 			} else {
+				response.set_status(Response_Status_OK);
 				if ((*res)->getTotalLen() != -1) {
 					response.set_total_length((*res)->getTotalLen());
-					response.set_status(Response_Status_OK);
 				} else if ((*res)->getShortestPath() != -1) {
 					response.set_shortest_path_length((*res)->getShortestPath());
-					response.set_status(Response_Status_OK);
 				}
 			}
-			if(response.status() != Response_Status_OK){
-				response.set_status(Response_Status_ERROR);
-			}
-
 			writeAnswer(response,cfd);
 
 

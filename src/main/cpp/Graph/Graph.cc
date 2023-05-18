@@ -180,7 +180,7 @@ uint64_t Graph::shortestToOne(Node *source, Node *dest){
 #endif
 
 
-#if TOONEDEBUG==true
+#if DEBUG==true
 	std::cout<<"shortest_path_ONETOONE "<< source->hash() << " : "<< dest->hash() << " = " << ret << std::endl;
 #endif
 
@@ -222,9 +222,11 @@ uint64_t Graph::shortestToAll(Node *source){
 		auto adist = currentNodes.find(a);
 
 		if(adist==currentNodes.end()){
+
 #if TOALLDEBUG==true
 			printf("Error in graph, source not found\n"); fflush(stdout);
 #endif
+
 			continue;											//TODO throw error, graph broken
 		}
 
@@ -254,7 +256,7 @@ uint64_t Graph::shortestToAll(Node *source){
 	pthread_rwlock_unlock(&(this->rwlock));
 #endif
 
-#if TOALLDEBUG == true
+#if DEBUG == true
 	uint64_t result = sumMap(&currentNodes);
 	printf("shortest_path_ONETOALL %ld : %ld\n", source->hash(), result);
 	fflush(stdout);

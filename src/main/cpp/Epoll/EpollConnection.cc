@@ -32,8 +32,8 @@ bool EpollConnection::handleEvent(uint32_t events) {
 	std::cout << "Some data received on connection: " << this->cnn->cfd << std::endl;
 #endif
 
-	int msgSize, count;
-	char *buff;
+	uint32_t msgSize;
+	int count;
 
 	if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {
 
@@ -48,14 +48,30 @@ bool EpollConnection::handleEvent(uint32_t events) {
 							std::string("connection message size read: ") + std::strerror(errno));
 			exit(1);
 		} else if (count == 0)
-
 			return false;
 
 		msgSize = ntohl(msgSize);
+		/*if (msgSize<0)
+			return true;*/
+#if DEBUG == true
+		std::cout<<msgSize<<" bytes of data received on connection "<<this->cnn->cfd<<std::endl;
+#endif
+		std::vector<char> buff(msgSize+1);
 
-		buff = new char[msgSize+1];
+		int totalRead = 0;
+		while (totalRead < msgSize) {
+			count = read(this->cnn->cfd, buff.data() + totalRead, msgSize - totalRead);
+			if (count <= 0) {
+				break;
+			}
+			totalRead += count;
+		}
 
-		count = read(this->cnn->cfd, buff, msgSize);
+		//count = read(this->cnn->cfd, buff.data(), msgSize);
+
+#if DEBUG == true
+		std::cout <<"Actual read "<<totalRead<<" bytes on connection "<<this->cnn->cfd<<std::endl;
+#endif
 
 		if(count <= 0){
 			throw std::runtime_error(
@@ -63,8 +79,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 			exit(1);
 		}
 
-		Request req = parseProtobuf(buff, count);
-		delete[] buff;
+		Request req = parseProtobuf(&buff, msgSize);
 
 		if(req.has_walk()){									//WALK ROUTE
 #if DEBUG == true
@@ -73,10 +88,16 @@ bool EpollConnection::handleEvent(uint32_t events) {
 #endif
 
 				std::vector<Edge*> edges = parseEdges(req);
-				for(auto e:edges)
+				for(auto e : edges)
 					this->cnn->buffer.push_back(e);
 
-				return true;
+			Message *graphmsg = new Message(this->cnn->cfd, false);
+			Result *res = new Result();			//TODO delete result in epollresult
+			res->setMessage(graphmsg);
+			res->setStatus(true);
+			this->retq->push(res);
+
+			return true;
 
 			} else if (req.has_onetoone()){			//ONE-TO-ONE ROUTE
 
@@ -146,14 +167,14 @@ std::vector<Node> parseMany(Request req){
 	//TODO implement parsing many destinations
 }
 
-Request EpollConnection::parseProtobuf(char *buff, int count){
+Request EpollConnection::parseProtobuf(std::vector<char> *buff, int count){
 
 	Request req;
 
-	if (!req.ParseFromArray(buff,count )) {
+	if (!req.ParseFromArray(buff->data(), count )) {
 		// Parse error
 		std::cout << "Parsing Data error" << std::endl;
-		exit(1);
+		//exit(1);
 	}
 
 	return req;

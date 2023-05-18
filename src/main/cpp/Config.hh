@@ -1,8 +1,8 @@
-#define NETTHREADS 2
-#define GRAPHTTREADS 2
+#define NETTHREADS 4
+#define GRAPHTTREADS 4
 
 #define RTREENODES 16
-#define DEBUG true
+#define DEBUG false
 #define GRAPHDEBUG false
 #define TOONEDEBUG false
 #define TOALLDEBUG true
@@ -10,6 +10,6 @@
 
 #define GRIDWIDTH 869		//500mm radius
 
-#if DEBUG == true
+#if DEBUG == true || TOONEDEBUG == true || TOALLDEBUG == true
 #include <iostream>
 #endif

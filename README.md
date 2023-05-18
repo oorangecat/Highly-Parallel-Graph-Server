@@ -21,4 +21,4 @@ And finally run the project:
 
 for example:
 
-    ./builddir/src/main/cpp/server 12345 json
+    ./builddir/src/main/cpp/server 

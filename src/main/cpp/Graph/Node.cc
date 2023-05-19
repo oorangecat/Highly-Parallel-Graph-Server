@@ -25,44 +25,54 @@ uint32_t Node::distance(uint32_t x, uint32_t y){
 	return (uint32_t) std::floor( sqrt( dist ) );
 }
 
+double Node::ddistance(uint32_t x, uint32_t y) {
+	double dx = static_cast<double>(x)-static_cast<double>(this->x);
+	double dy = static_cast<double>(y)-static_cast<double>(this->y);
+	double dist=(dy*dy) + (dx*dx);
+
+#if DATADEBUG==true
+	//printf("DISTANCE (%d,%d) : (%d,%d) = %f\n", x, y, this->x, this->y, sqrt(dist));
+#endif
+	return sqrt(dist);
+}
 
 uint64_t Node::hash(){
-
+/*
 	if(this->chash == 0) {
 
 		//split plane in cells, find closest grid point (up-left)
-		uint32_t xi = std::floor(this->x / GRIDWIDTH) * GRIDWIDTH;
-		uint32_t yi = std::floor(this->y / GRIDWIDTH) * GRIDWIDTH;
+		double xi = std::floor(this->x / GRIDWIDTH) * GRIDWIDTH;
+		double yi = std::floor(this->y / GRIDWIDTH) * GRIDWIDTH;
 
-		uint32_t xres = 0;
-		uint32_t yres = 0;
-		uint32_t distres;
-		uint32_t dist = this->distance(xi, yi);
+		double xres = 0;
+		double yres = 0;
+		double distres;
+		double dist = this->ddistance(xi, yi);
 
-		if ( (distres = this->distance(xi + GRIDWIDTH, yi)) < dist ) {	//(up,right)
+		if ( (distres = this->ddistance(xi + GRIDWIDTH, yi)) < dist ) {	//(up,right)
 			xres = xi + GRIDWIDTH;
 			yres = yi;
 			dist = distres;
 		}
 
-		if ( (distres = this->distance(xi + GRIDWIDTH, yi + GRIDWIDTH)) < dist) { //down,right
+		if ( (distres = this->ddistance(xi + GRIDWIDTH, yi + GRIDWIDTH)) < dist) { //down,right
 			xres = xi + GRIDWIDTH;
 			yres = yi + GRIDWIDTH;
 			dist = distres;
 		}
 
-		if ( (distres = this->distance(xi, yi + GRIDWIDTH) ) < dist) {					//down, left
+		if ( (distres = this->ddistance(xi, yi + GRIDWIDTH) ) < dist) {					//down, left
 			xres = xi;
 			yres = yi + GRIDWIDTH;
 			dist = distres;
 		}
 
-		this->chash = ((uint64_t)xres << 32) | yres;		//Identifies close point
+		this->chash = ((uint64_t)std::floor(xres) << 32) | (uint64_t) std::floor(yres);		//Identifies close point
 
 
 
-	}
-#if DEBUG==true
+	}*/
+#if DATADEBUG==true
 	//std::cout << "PTR:"<<this<<"|hash:"<<this->chash<<std::endl;
 #endif
 	return this->chash;
@@ -76,13 +86,13 @@ void Node::addEdge(Edge *w){
 	auto res = this->edges->find(bhash);
 
 	if(res != this->edges->end()){
-#if DEBUG == true
+#if DATADEBUG == true
 		printf("Edge %ld -> %ld already present\n", this->hash(), w->getB()->hash());
 		fflush(stdout);
 #endif
 		res->second->addWalk(w->getDist());
 	} else {
-#if DEBUG == true
+#if DATADEBUG == true
 		printf("Edge %ld -> %ld added, dist: %d\n", this->hash(), w->getB()->hash(), w->getDist());
 		fflush(stdout);
 #endif

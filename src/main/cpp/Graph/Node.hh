@@ -25,12 +25,16 @@ public:
 		Node(int32_t x, int32_t y) { this->x=x; this->y=y;  this->edges = new std::unordered_map<uint64_t, Edge*>;};
 
 		void set_p(int32_t x, int32_t y);
-
+		int32_t x_(){return x;};
+		int32_t y_(){return y;};
+		void setHash(uint64_t h){ this->chash=h;};
 		//TODO [mm] precision, might be improved with fp result (worth it?)
 		uint32_t distance(uint32_t x, uint32_t y);
 		int32_t distance(Node *other);
+		double ddistance(uint32_t x, uint32_t y);
 
-		int32_t edgeDist(Node *other);
+
+			int32_t edgeDist(Node *other);
 
 		void addEdge(Edge *w);
 		std::unordered_map<uint64_t, Edge*> *getEdges( ) { return this->edges; };

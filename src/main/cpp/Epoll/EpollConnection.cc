@@ -28,7 +28,7 @@ EpollConnection::~EpollConnection() noexcept {
 }
 
 bool EpollConnection::handleEvent(uint32_t events) {
-#if DEBUG == true
+#if DATADEBUG == true
 	std::cout << "Some data received on connection: " << this->cnn->cfd << std::endl;
 #endif
 
@@ -53,7 +53,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 		msgSize = ntohl(msgSize);
 		/*if (msgSize<0)
 			return true;*/
-#if DEBUG == true
+#if DATADEBUG == true
 		std::cout<<msgSize<<" bytes of data received on connection "<<this->cnn->cfd<<std::endl;
 #endif
 		std::vector<char> buff(msgSize+1);
@@ -69,7 +69,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 
 		//count = read(this->cnn->cfd, buff.data(), msgSize);
 
-#if DEBUG == true
+#if DATADEBUG == true
 		std::cout <<"Actual read "<<totalRead<<" bytes on connection "<<this->cnn->cfd<<std::endl;
 #endif
 
@@ -77,12 +77,13 @@ bool EpollConnection::handleEvent(uint32_t events) {
 			throw std::runtime_error(
 							std::string("connection message  read: ") + std::strerror(errno));
 			exit(1);
+			//return true;
 		}
 
 		Request req = parseProtobuf(&buff, msgSize);
 
 		if(req.has_walk()){									//WALK ROUTE
-#if DEBUG == true
+#if DATADEBUG == true
 				printf("Received WALK on connection %d\n", this->cnn->cfd);
 				fflush(stdout);
 #endif

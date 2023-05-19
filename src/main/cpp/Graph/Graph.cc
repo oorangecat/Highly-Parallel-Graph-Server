@@ -62,7 +62,7 @@ void Graph::addWalkVector(std::vector<Edge*> walks) {
 
 	Node *a, *b;
 	for(auto el : walks) {
-		a =	this->pointmap->addPoint(el->getA());
+		a =	this->pointmap->addPoint(el->getA());			//also sets the hash!
 		b = this->pointmap->addPoint(el->getB());
 		el->setA(a);
 		el->setB(b);
@@ -181,7 +181,7 @@ uint64_t Graph::shortestToOne(Node *source, Node *dest){
 
 
 #if DEBUG==true
-	std::cout<<"shortest_path_ONETOONE "<< source->hash() << " : "<< dest->hash() << " = " << ret << std::endl;
+	std::cout<<"shortest_path_ONETOONE "<< source->hash() << " : "<< dest->hash() << " = " << ret << "\t Points: "<<this->pointmap->size()<<std::endl;
 #endif
 
 	return ret;
@@ -221,7 +221,7 @@ uint64_t Graph::shortestToAll(Node *source){
 		auto res = currentNodes.find(b);
 		auto adist = currentNodes.find(a);
 
-		if(adist==currentNodes.end()){
+		if(adist == currentNodes.end()){
 
 #if TOALLDEBUG==true
 			printf("Error in graph, source not found\n"); fflush(stdout);
@@ -258,7 +258,7 @@ uint64_t Graph::shortestToAll(Node *source){
 
 #if DEBUG == true
 	uint64_t result = sumMap(&currentNodes);
-	printf("shortest_path_ONETOALL %ld : %ld\n", source->hash(), result);
+	printf("shortest_path_ONETOALL %ld : %ld | Points: %d\n", source->hash(), result, this->pointmap->size());
 	fflush(stdout);
 	return result;
 #elif  TOALLDEBUG == false

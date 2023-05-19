@@ -1,4 +1,3 @@
-avro_dep = meson.get_compiler('cpp').find_library('avrocpp')
 thread_dep = dependency('threads')
 jsoncpp_dep = dependency('jsoncpp')
 protobuf_dep = dependency('protobuf')

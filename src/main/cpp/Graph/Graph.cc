@@ -56,6 +56,14 @@ Node* Graph::closestPoint(Node *p){
 
 
 #if STUPIDSHORTEST==false
+
+struct NodeDistanceComparator {
+		bool operator()(Node* a, Node* b) const {
+			return a->getDistance() > b->getDistance();
+		}
+};
+
+
 uint64_t Graph::shortestToOne(Node *s, Node *d){
 
 	Node *source = this->pointmap->closestPoint( s->x_(), s->y_() );
@@ -65,16 +73,63 @@ uint64_t Graph::shortestToOne(Node *s, Node *d){
 
 	//TODO query cache before
 
+	unordered_map<Node*, uint64_t> distance;
+	unordered_map<Node*, Node*> previous;
+	priority_queue<Node*, std::vector<Node*>, NodeDistanceComparator> queue;
+
+
+	unordered_map<Node*, Edge*> *edges;
+
+	distance[source] = 0;
+	source->setDistance(0);
+	queue.push(source);
+	Node* current;
+
+	uint64_t dist;
+	Node* neighbor;
+	Node* tmp;
+
+	while(!queue.empty()) {
+		tmp = queue.top();
+		queue.pop();
+		current = this->pointmap->closestPoint(tmp->x_(), tmp->y_());
+
+		/*if (current == dest)
+			break;*/
+
+		edges = current->getEdges();
+
+		for (auto e: *edges) {
+			neighbor = e.second->getB();
+			dist = distance[current] + e.second->getDist();
+
+			auto res = distance.find(neighbor);
+			if (res != distance.end()) {
+				if (res->second > dist) {
+					distance[neighbor] = dist;
+					previous[neighbor] = current;
+					neighbor->setDistance(dist);
+					queue.push(neighbor);
+				}
+			} else {
+				distance[neighbor] = dist;
+				neighbor->setDistance(dist);
+				queue.push(neighbor);
+			}
+		}
+	}
+
+
 
 	pthread_rwlock_unlock(&(this->rwlock));
 
 
 
 #if DEBUG==true
-	std::cout<<"shortest_path_ONETOONE "<< source->hash() << " : "<< dest->hash() << " = " << ret << "\t Points: "<<this->pointmap->size()<<std::endl;
+	std::cout<<"shortest_path_ONETOONE "<< source->hash() << " : "<< dest->hash() << " = " << dest->getDistance()  << "\t Points: "<<this->pointmap->size()<<std::endl;
 #endif
 
-	return ret;
+	return dest->getDistance();
 }
 
 
@@ -169,17 +224,14 @@ uint64_t Graph::shortestToOne(Node *source, Node *dest){
 
 
 
-
-
 uint64_t Graph::shortestToAll(Node *source){
-#if USERCU==true
-	rcu_read_lock_qsbr(); 			//Read lock for copying old map
-#elif USERCU == false
+
 	pthread_rwlock_rdlock( &( this->rwlock ) );			//readlock on Graph
-#endif
+
 #if TOALLDEBUG==true
 	std::cout<<"to-all-source: "<<source<<std::endl;
 #endif
+
 	std::unordered_map<Node*, uint32_t> currentNodes;	//for node distances
 	std::priority_queue<Edge*> nextEdges;
 
@@ -197,17 +249,13 @@ uint64_t Graph::shortestToAll(Node *source){
 		e = nextEdges.top();
 		nextEdges.pop();
 		a = e->getA(); b = e->getB();
-#if TOALLDEBUG==true
-		std::cout<<"to-all-source-parsed: "<<a<<std::endl;
-#endif
+
 		auto res = currentNodes.find(b);
 		auto adist = currentNodes.find(a);
 
 		if(adist == currentNodes.end()){
 
-#if TOALLDEBUG==true
-			printf("Error in graph, source not found\n"); fflush(stdout);
-#endif
+
 			continue;											//TODO throw error, graph broken
 		}
 
@@ -230,12 +278,8 @@ uint64_t Graph::shortestToAll(Node *source){
 			}
 		}
 	}
-#if USERCU==true
-	urcu_qsbr_read_unlock();
-	urcu_qsbr_quiescent_state();
-#elif USERCU==false
+
 	pthread_rwlock_unlock(&(this->rwlock));
-#endif
 
 #if DEBUG == true
 	uint64_t result = sumMap(&currentNodes);
@@ -267,10 +311,7 @@ uint64_t Graph::sumPath(std::unordered_map<Node*, Node*> *parent, Node* source, 
 			prev = next;
 			next = res->second;
 			dist = next->edgeDist(prev);
-			if(dist == -1)
-				return 0;
-			else
-				sum += dist;
+			sum += dist;
 		} else{
 			return 0;
 		}

@@ -57,7 +57,6 @@ bool EpollResult::handleEvent(uint32_t events) {
 		if(res!=nullptr){
 			Message *msg = (*res)->getMsg();
 			int cfd = msg->get_cfd();							//fd of the connection to be answered to
-			//TODO send back answer via Protobuf
 
 			Response response;
 
@@ -65,9 +64,9 @@ bool EpollResult::handleEvent(uint32_t events) {
 				response.set_status(Response_Status_ERROR);
 			} else {
 				response.set_status(Response_Status_OK);
-				if ((*res)->getTotalLen() != -1) {
+				if ((*res)->getTotalLen() != 0) {
 					response.set_total_length((*res)->getTotalLen());
-				} else if ((*res)->getShortestPath() != -1) {
+				} else if ((*res)->getShortestPath() != 0) {
 					response.set_shortest_path_length((*res)->getShortestPath());
 				}
 			}

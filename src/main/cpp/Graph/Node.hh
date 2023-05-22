@@ -30,6 +30,7 @@ struct Point {
 class Node {
 		int32_t x,y;
 		uint64_t chash = 0;
+		uint64_t dist;
 		//<hash_destination, edge>
 		std::unordered_map<Node*, Edge*> *edges;
 
@@ -56,11 +57,14 @@ public:
 
 		void addEdge(Edge *w);
 		std::unordered_map<Node*, Edge*> *getEdges( ) { return this->edges; };
-
 		uint64_t hash();
 
+		 uint64_t getDistance(){ return this->dist;};
+		 void setDistance(uint64_t d) { this->dist = d; };
 
-
+		bool operator>(Node* other) const {
+			return this->dist > other->getDistance();
+		}
 
 };
 

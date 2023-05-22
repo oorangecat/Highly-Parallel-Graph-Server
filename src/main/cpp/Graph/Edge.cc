@@ -23,8 +23,13 @@ Edge::Edge(int32_t xa, int32_t ya, int32_t xb, int32_t yb, uint32_t dist){
 }
 
 void Edge::addWalk(uint32_t newdist){
-	this->dist = ((this->dist * this->nWalks) + newdist) / ++this->nWalks;;
+	//std::cout<<"Prev: "<<this->dist;
+	this->dist = (((uint64_t)this->dist * (uint64_t)this->nWalks) + newdist) / (uint64_t)(this->nWalks+1);
+	this->nWalks++;
+//	std::cout<<" | New: "<<this->dist<<std::endl;
+
 }
+
 void Edge::setDist(uint32_t dist){
 	this->dist = dist;
 }

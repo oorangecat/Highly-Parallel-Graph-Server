@@ -52,21 +52,26 @@ bool EpollGraphMessage::handleEvent(uint32_t events){
 			}
 
 			if( !rec->isToMany() ) {          //ONE-TO-ONE route
-				Node *source = this->graph->addPoint(rec->getSource());
-				Node *dest = this->graph->addPoint(rec->getDest().front());
+				Node *source = this->graph->closestPoint(rec->getSource());
+				Node *dest = this->graph->closestPoint(rec->getDest().front());
 				uint64_t mindist = this->graph->shortestToOne(source, dest);
-				if(mindist==-1){
+				if(mindist==0){
 					res->setStatus(false);
 				} else {
 					res->setStatus(true);
 					res->setShortest(mindist);
 				}
 			} else {														//ONE-TO-ALL route
-				Node *source = this->graph->addPoint(rec->getSource());
+				Node *source = this->graph->closestPoint(rec->getSource());
 				uint64_t totdist = this->graph->shortestToAll(source);
-				res->setTotLen(totdist);
-				res->setStatus(true);
+				if(totdist==0){
+					res->setStatus(false);
+				} else {
+					res->setTotLen(totdist);
+					res->setStatus(true);
+				}
 			}
+
 			res->setMessage(rec);
 
 

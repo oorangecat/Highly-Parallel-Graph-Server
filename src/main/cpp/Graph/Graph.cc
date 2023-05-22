@@ -2,14 +2,11 @@
 // Created by marco on 07/05/2023.
 //
 
+#include <limits>
+#include <stack>
 #include "Graph.hh"
 
 
-void Graph::addWalkUnsync(Edge newWalk){
-	Node* res =	this->pointmap->addPoint(newWalk.getA());
-	this->addLocation(newWalk.getB());
-	res->addEdge(&newWalk);
-}
 
 
 
@@ -18,51 +15,19 @@ void Graph::addWalkUnsync(Edge newWalk){
  * 1.Copy whole vectors
  * 2.Merge new values
  * 3.Swap new vector
- * TODO check performances. Given the high number of walks, RW could be faster
  * */
 void Graph::addWalkVector(std::vector<Edge*> walks) {
 #if DEBUG==true
-	printf("\nWRITE PROTECTED | Adding %ld walks to graph\n\n", walks.size());
+	printf("\nWRITE PROTECTED | Adding %ld walks to graph | Starting size %d\n\n", walks.size(), this->pointmap->size());
 	fflush(stdout);
 #endif
 
-#if USERCU==true
 
-	this->writelock.lock();		//stop parallel writes
-
-	//clone map
-	std::unordered_map<int64_t, Node*>* newmap = new std::unordered_map<int64_t, Node*>();
-	rcu_read_lock_qsbr(); 			//Read lock for copying old map
-
-	std::unordered_map<int64_t, Node*>* oldmap = this->pointmap->getMap();
-	newmap->insert(oldmap->begin(), oldmap->end());
-	urcu_qsbr_read_unlock();		//map copied, release read lock
-	urcu_qsbr_quiescent_state();
-
-	PointMap *newinst = new PointMap(newmap);
-
-	//insert new walks and locations
-	Node *res;
-
-	for(auto el : walks) {
-		res =	newinst->addPoint(el->getA());				//TODO edges may be added to in-use nodes!
-		newinst->addPoint(el->getB());
-		res->addEdge(el);
-	}
-
-
-	this->pointmap = newinst;			//Swap map
-
-	urcu_qsbr_synchronize_rcu();		//Wait for graceperiod to end before deleting old map
-	delete(oldmap);
-
-	this->writelock.unlock();
-#elif USERCU == false
 	pthread_rwlock_wrlock(&(this->rwlock));
 
 	Node *a, *b;
-	for(auto el : walks) {
-		a =	this->pointmap->addPoint(el->getA());			//also sets the hash!
+	for(auto el : walks) {			//TODO optimize, reuse previous
+		a =	this->pointmap->addPoint(el->getA());
 		b = this->pointmap->addPoint(el->getB());
 		el->setA(a);
 		el->setB(b);
@@ -70,8 +35,11 @@ void Graph::addWalkVector(std::vector<Edge*> walks) {
 	}
 
 	pthread_rwlock_unlock(&(this->rwlock));
-
+#if DEBUG==true
+	printf("\nAdding WRITE PROTECTED  done. Size now: %d\n\n", this->pointmap->size());
+	fflush(stdout);
 #endif
+
 
 }
 
@@ -80,104 +48,26 @@ void Graph::addLocation(Node *nnode){
 	this->pointmap->addPoint(nnode);
 }
 
-
-uint32_t Graph::closestDistance(Node* loc) {
-	return this->pointmap->closestDistance(loc);
-}
-
 Node* Graph::closestPoint(Node *p){
-	return this->pointmap->closestPoint(p);
+	return this->pointmap->closestPoint(p->x_(), p->y_());
 }
 
-struct NodeWrapper {
-		Node *node;
-		int f_score;			//estimate to the end (g+distance)
-		int g_score;			//from start
 
-		NodeWrapper(Node *n, int g, int f) : node(n), f_score(f), g_score(g) {}
 
-		bool operator<(const NodeWrapper other) const {
-			return f_score > other.f_score;
-		}
-};
 
-uint64_t Graph::shortestToOne(Node *source, Node *dest){
-#if USERCU==true
-	rcu_read_lock_qsbr(); 			//Read lock for copying old map
-#elif USERCU == false
+#if STUPIDSHORTEST==false
+uint64_t Graph::shortestToOne(Node *s, Node *d){
+
+	Node *source = this->pointmap->closestPoint( s->x_(), s->y_() );
+	Node *dest = this->pointmap->closestPoint( d->x_(), d->y_() );
+
 	pthread_rwlock_rdlock( &( this->rwlock ) );			//readlock on Graph
-#endif
 
 	//TODO query cache before
 
-	/*
-	 * G_score: cost FROM the starting point
-	 * F_score: heuristic TO the final point 	(direct distance used)
-	 */
 
-	//std::unordered_set<Node*> open_set;			//Nodes to be evaluated
-	std::priority_queue<NodeWrapper*> open_set;
-
-	std::unordered_set<Node*>	closed_set;		//Nodes already evaluated
-
-	std::unordered_map<Node*, Node*> parent;	//predecessor of node on the path
-	//Node* s = this->pointmap->addPoint(source);
-														//NODE   gscore	       fscore
-	open_set.push( new NodeWrapper(source,   0, 		source->distance(dest)) );
-	//TODO dynamic allocation may cause performance issue and memory leaks
-
-	NodeWrapper *currentw;
-	std::unordered_map<uint64_t, Edge*> *edgelist;
-	uint64_t ret = 0;				//0 for failure
-
-	while(!open_set.empty()){				//while something still to evaluate
-		currentw = open_set.top();					//extract top element of the list
-
-#if TOONEDEBUG==true
-
-		printf( "SHORTEST| Current node: %ld | Edge length: %d\n", currentw->node->hash(), currentw->node->getEdges()->size() );
-		fflush(stdout);
-#endif
-
-		if( currentw->node == dest ) {
-			ret = sumPath(&parent, source, dest);			//Sum all lengths
-			break;
-		}
-
-		open_set.pop();
-
-		if( closed_set.find(currentw->node) != closed_set.end() ) {
-			delete(currentw);
-			continue;
-		}
-
-		closed_set.insert(currentw->node);			//curent node as already visited
-
-		edgelist = currentw->node->getEdges();
-		Edge* e;
-		int32_t f;
-
-		for (  auto pair : *edgelist ) {
-
-			e = pair.second;
-#if TOONEDEBUG==true
-			printf("Evaluating edge %ld:%ld cost: %ld\n", e->getA()->hash(), e->getB()->hash(), e->getDist());
-			fflush(stdout);
-#endif
-			f = e->getB()->distance( dest ) + currentw->g_score + e->getDist();
-
-			parent.insert(std::make_pair(e->getB(), currentw->node));		//current node is father of neighbour
-			open_set.push ( new NodeWrapper( e->getB(), currentw->g_score + e->getDist(), f));
-		}
-		delete(currentw);
-	}
-
-#if USERCU==true
-	urcu_qsbr_read_unlock();
-	urcu_qsbr_quiescent_state();
-#elif USERCU==false
 	pthread_rwlock_unlock(&(this->rwlock));
-#endif
+
 
 
 #if DEBUG==true
@@ -188,7 +78,99 @@ uint64_t Graph::shortestToOne(Node *source, Node *dest){
 }
 
 
-//TODO find segmentation
+
+
+#elif STUPIDSHORTEST == true
+uint64_t Graph::shortestToOne(Node *source, Node *dest){
+#if DEBUG== true
+	std::cout<<"Starting one-to-one... Edges: "<<this->pointmap->totEdges()<<std::endl;
+#endif
+	// Stack to store the nodes to visit
+	std::stack<Node*> nodeStack;
+
+	// Map to store the visited nodes
+	std::unordered_map<Node*, bool> visited;
+
+	// Map to store the distances from the start node to each node
+	std::unordered_map<Node*, uint64_t> distances;
+
+	Node* s = this->pointmap->closestPoint(source->x_(), source->y_());
+	Node* d = this->pointmap->closestPoint(dest->x_(), dest->y_());
+
+
+	// Push the start node onto the stack
+	nodeStack.push(s);
+	distances[s] = 0;
+
+	while (!nodeStack.empty()) {
+		// Pop the current node from the stack
+		Node* tmp = nodeStack.top();
+		Node* currentNode = this->pointmap->closestPoint(tmp->x_(), tmp->y_());
+		nodeStack.pop();
+
+		// Mark the current node as visited
+		visited[currentNode] = true;
+		// Check if the current node is the end node
+		if (currentNode == d ) {
+			printf("Dest: %lu\n",distances[d]);
+			continue;
+			//return distances[d];
+		}
+
+		// Iterate over the edges of the current node
+		for (auto entry : *(currentNode->getEdges())) {
+			Edge* edge = entry.second;
+			tmp = edge->getB();
+			Node* neighborNode = this->pointmap->closestPoint(tmp->x_(), tmp->y_());
+
+			auto res = visited.find(neighborNode);
+			if(res == visited.end())
+				visited[neighborNode] = false;
+
+			// Check if the neighbor node has not been visited
+
+
+				// Calculate the new distance from the start node to the neighbor node
+				uint64_t newDistance = distances[currentNode] + static_cast<uint64_t>(edge->getDist());
+
+				// Update the distance if it is shorter than the current distance
+				auto res2 = distances.find(neighborNode);
+				if(res2 != distances.end()) {
+					if (newDistance < res2->second) {
+						distances[neighborNode] = newDistance;
+						visited[neighborNode] = false;
+					}
+				} else  {
+					distances[neighborNode] = newDistance;
+				}
+				// Push the neighbor node onto the stack for further exploration
+			if (!visited[neighborNode]) {
+				nodeStack.push(neighborNode);
+			}
+		}
+	}
+#if DEBUG==true
+	std::cout<<"shortest_path_ONETOONE "<< s->hash() << " : "<< d->hash() << " = " << distances[d] << "\t Points: "<<this->pointmap->size()<<std::endl;
+	std::cout<<"Visited: "<< visited.size()<<std::endl;
+#endif
+
+#if DEBUG==true
+	std::cout<<"shortest_path_ONETOONE "<< s->hash() << " : "<< d->hash() << " = max" << "\t Points: "<<this->pointmap->size()<<std::endl;
+#endif
+	// Return a large value to indicate that no path was found
+	return std::numeric_limits<uint64_t>::max();
+}
+#endif
+
+
+
+
+
+
+
+
+
+
 uint64_t Graph::shortestToAll(Node *source){
 #if USERCU==true
 	rcu_read_lock_qsbr(); 			//Read lock for copying old map
@@ -203,7 +185,7 @@ uint64_t Graph::shortestToAll(Node *source){
 
 	currentNodes.insert(std::make_pair(source, 0));
 
-	std::unordered_map<uint64_t, Edge*> *edges = source->getEdges();
+	std::unordered_map<Node*, Edge*> *edges = source->getEdges();
 	Edge *e;
 	Node *a, *b;
 
@@ -226,19 +208,18 @@ uint64_t Graph::shortestToAll(Node *source){
 #if TOALLDEBUG==true
 			printf("Error in graph, source not found\n"); fflush(stdout);
 #endif
-
 			continue;											//TODO throw error, graph broken
 		}
 
 		if(res == currentNodes.end()){			//if destination is not yet in the map, add it
-			currentNodes.insert(std::make_pair(b, adist->second + e->getDist()));
+			currentNodes[b]= adist->second + e->getDist();
 			edges = b->getEdges();
 			for(auto e: *edges)
 				nextEdges.push(e.second);		//add all its edges
 
 		} else {											//if we already have it in the map
 			if(res->second > adist->second + e->getDist()){
-				currentNodes.insert(std::make_pair(b, adist->second + e->getDist()));
+				currentNodes[b]=adist->second + e->getDist();
 				edges = b->getEdges();
 
 				for(auto e: *edges)
@@ -310,3 +291,5 @@ uint64_t Graph::sumMap(std::unordered_map<Node*,uint32_t> *map){
 Node* Graph::addPoint(Node *p){
 	return this->pointmap->addPoint(p);
 }
+
+

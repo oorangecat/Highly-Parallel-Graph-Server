@@ -59,6 +59,7 @@ public:
 		void addLocation(Node *nnode);
 		uint32_t closestDistance(Node *loc);
 
+
 		Node* closestPoint(Node *p);
 
 		Node* addPoint(Node *p);

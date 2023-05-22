@@ -36,6 +36,7 @@ void writeAnswer(Response serializedStr, int cfd) {
 	if (bytesWritten != serialized.size()) {
 		std::cerr << "Error writing serialized string to file descriptor." << std::endl;
 		return;
+
 	}
 }
 

@@ -19,8 +19,8 @@ int32_t Node::distance(Node *other) {
 
 
 uint32_t Node::distance(uint32_t x, uint32_t y){
-	double dx = x-this->x;
-	double dy = y-this->y;
+	uint64_t dx = x-this->x;
+	uint64_t dy = y-this->y;
 	double dist = (dy*dy) + (dx*dx);
 	return (uint32_t) std::floor( sqrt( dist ) );
 }
@@ -30,60 +30,22 @@ double Node::ddistance(uint32_t x, uint32_t y) {
 	double dy = static_cast<double>(y)-static_cast<double>(this->y);
 	double dist=(dy*dy) + (dx*dx);
 
-#if DATADEBUG==true
-	//printf("DISTANCE (%d,%d) : (%d,%d) = %f\n", x, y, this->x, this->y, sqrt(dist));
+#if DISTDEBUG==true
+	printf("DISTANCE (%d,%d) : (%d,%d) = %f\n", x, y, this->x, this->y, sqrt(dist));
 #endif
 	return sqrt(dist);
 }
 
-uint64_t Node::hash(){
-/*
-	if(this->chash == 0) {
+uint64_t Node::hash(){	//To be used only for print
 
-		//split plane in cells, find closest grid point (up-left)
-		double xi = std::floor(this->x / GRIDWIDTH) * GRIDWIDTH;
-		double yi = std::floor(this->y / GRIDWIDTH) * GRIDWIDTH;
-
-		double xres = 0;
-		double yres = 0;
-		double distres;
-		double dist = this->ddistance(xi, yi);
-
-		if ( (distres = this->ddistance(xi + GRIDWIDTH, yi)) < dist ) {	//(up,right)
-			xres = xi + GRIDWIDTH;
-			yres = yi;
-			dist = distres;
-		}
-
-		if ( (distres = this->ddistance(xi + GRIDWIDTH, yi + GRIDWIDTH)) < dist) { //down,right
-			xres = xi + GRIDWIDTH;
-			yres = yi + GRIDWIDTH;
-			dist = distres;
-		}
-
-		if ( (distres = this->ddistance(xi, yi + GRIDWIDTH) ) < dist) {					//down, left
-			xres = xi;
-			yres = yi + GRIDWIDTH;
-			dist = distres;
-		}
-
-		this->chash = ((uint64_t)std::floor(xres) << 32) | (uint64_t) std::floor(yres);		//Identifies close point
-
-
-
-	}*/
-#if DATADEBUG==true
-	//std::cout << "PTR:"<<this<<"|hash:"<<this->chash<<std::endl;
-#endif
-	return this->chash;
+	return (this->x+this->y);
 
 }
 
 void Node::addEdge(Edge *w){
 
-	uint64_t bhash = w->getB()->hash();
 
-	auto res = this->edges->find(bhash);
+	auto res = this->edges->find(w->getB());
 
 	if(res != this->edges->end()){
 #if DATADEBUG == true
@@ -96,12 +58,12 @@ void Node::addEdge(Edge *w){
 		printf("Edge %ld -> %ld added, dist: %d\n", this->hash(), w->getB()->hash(), w->getDist());
 		fflush(stdout);
 #endif
-		this->edges->insert( std::make_pair(bhash,w) );
+		this->edges->insert( std::make_pair(w->getB(),w) );
 	}
 }
 
 int32_t Node::edgeDist(Node *other){
-	auto res = this->edges->find(other->hash());
+	auto res = this->edges->find(other);
 	if(res != this->edges->end())
 		return res->second->getDist();
 	else

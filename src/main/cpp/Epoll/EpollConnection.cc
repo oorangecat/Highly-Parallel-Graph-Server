@@ -44,9 +44,10 @@ bool EpollConnection::handleEvent(uint32_t events) {
 		count = read(this->cnn->cfd, &msgSize, sizeof(msgSize));
 
 		if(count < 0){
-			throw std::runtime_error(
+			/*throw std::runtime_error(
 							std::string("connection message size read: ") + std::strerror(errno));
-			exit(1);
+			exit(1);*/
+			 return true;
 		} else if (count == 0)
 			return false;
 
@@ -58,26 +59,27 @@ bool EpollConnection::handleEvent(uint32_t events) {
 #endif
 		std::vector<char> buff(msgSize+1);
 
-		int totalRead = 0;
+		uint32_t totalRead = 0;
 		while (totalRead < msgSize) {
 			count = read(this->cnn->cfd, buff.data() + totalRead, msgSize - totalRead);
+
 			if (count <= 0) {
 				break;
 			}
 			totalRead += count;
 		}
 
-		//count = read(this->cnn->cfd, buff.data(), msgSize);
 
 #if DATADEBUG == true
 		std::cout <<"Actual read "<<totalRead<<" bytes on connection "<<this->cnn->cfd<<std::endl;
 #endif
 
 		if(count <= 0){
+			/*
 			throw std::runtime_error(
 							std::string("connection message  read: ") + std::strerror(errno));
-			exit(1);
-			//return true;
+			exit(1);*/
+			return true;
 		}
 
 		Request req = parseProtobuf(&buff, msgSize);
@@ -109,9 +111,9 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				OneToOne msg = req.onetoone();
 				Node *s = new Node(msg.origin().x(), msg.origin().y());									//TODO check memory leak
 				Node *e = new Node(msg.destination().x(), msg.destination().y());
-				std::vector<Edge*> buff(this->cnn->buffer);
+				std::vector<Edge*> buff( this->cnn->buffer );
 
-				Message *graphmsg = new Message(this->cnn->cfd, buff, s, e, this->retq);		//TODO check delete
+				Message *graphmsg = new Message( this->cnn->cfd, buff, s, e, this->retq );		//TODO check delete
 
 				this->cnn->buffer.clear();			//clears Edge cache as they are sent to graphworker
 
@@ -129,6 +131,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				std::vector<Edge*> buff(this->cnn->buffer);
 
 				Message *graphmsg = new Message(this->cnn->cfd, buff, s, this->retq);
+
 				this->cnn->buffer.clear();
 
 				outq->push(graphmsg);
@@ -137,7 +140,6 @@ bool EpollConnection::handleEvent(uint32_t events) {
 
 			} else
 				return false;
-
 	}
 }
 
@@ -147,6 +149,7 @@ std::vector<Edge*> parseEdges(Request req){
 
 	Walk walk = req.walk();
 	int n = walk.locations_size();
+
 	std::vector<Edge*> res;
 
 	Location loc1, loc2;
@@ -154,9 +157,9 @@ std::vector<Edge*> parseEdges(Request req){
 	for(int i = 0; i < n-1; i++) {
 		loc1 = walk.locations(i);
 		loc2 = walk.locations(i+1);
-		Node *a = new Node(loc1.x(), loc1.y());
+		Node *a = new Node(loc1.x(), loc1.y());			//Node created here
 		Node *b = new Node(loc2.x(), loc2.y());
-		Edge *e = new Edge(a,b,walk.lengths(i));			//TODO check memory leak
+		Edge *e = new Edge(a,b,walk.lengths(i));
 		res.push_back(e);
 	}
 

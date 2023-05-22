@@ -101,12 +101,9 @@ bool EpollServer::handleEvent(uint32_t events) {
 
 			int newConn = acceptConnection();
 
-			if(newConn != NULL){
+			if(newConn >= 0){
 
 				writeToThread(newConn);
-				/*if(!writeToThread(newConn)){			//PIPES approach discarded
-					voidThread();
-				}*/
 
 			} else{
 				throw std::runtime_error(

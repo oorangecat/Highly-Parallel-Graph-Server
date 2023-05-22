@@ -42,12 +42,12 @@ public:
 		}
 
 		Message(int cfd, bool res) {
-			this->cfd = cfd;this->RESET = res;
+			this->cfd = cfd; this->RESET = res;
 		}
 
 
 		Message(int cfd, std::vector<Edge*> walks, Node *source, Node* dest, 	MessageQueue<Result*> *retq){
-			this->cfd = cfd; this->walks=walks; this->source=source, this->dest.push_back(dest); this->retqueue=retq;
+			this->cfd = cfd; this->walks = walks; this->source=source, this->dest.push_back(dest); this->retqueue=retq;
 		}
 
 

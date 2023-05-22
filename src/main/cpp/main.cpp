@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
 		netth.push_back(tmp);
 	}
 
-	EpollServer server(1234,NETTHREADS, netQueues);
+	EpollServer server(1222,NETTHREADS, netQueues);
 
 	epoll.registerEpollEntry(server);
 	cout << "\nServer listening at port 1234\n";

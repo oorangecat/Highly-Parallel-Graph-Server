@@ -40,16 +40,20 @@ bool EpollConnection::handleEvent(uint32_t events) {
 		return false;
 
 	} else {
-
+		this->cnn->connmut.lock();
 		count = read(this->cnn->cfd, &msgSize, sizeof(msgSize));
 
 		if(count < 0){
 			/*throw std::runtime_error(
 							std::string("connection message size read: ") + std::strerror(errno));
 			exit(1);*/
-			 return true;
-		} else if (count == 0)
+			this->cnn->connmut.unlock();
+			return true;
+		} else if (count == 0) {
+			this->cnn->connmut.unlock();
+
 			return false;
+		}
 
 		msgSize = ntohl(msgSize);
 		/*if (msgSize<0)
@@ -69,6 +73,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 			totalRead += count;
 		}
 
+		this->cnn->connmut.unlock();
 
 #if DATADEBUG == true
 		std::cout <<"Actual read "<<totalRead<<" bytes on connection "<<this->cnn->cfd<<std::endl;
@@ -94,7 +99,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				for(auto e : edges)
 					this->cnn->buffer.push_back(e);
 
-			Message *graphmsg = new Message(this->cnn->cfd, false);
+			Message *graphmsg = new Message(this->cnn, false);
 			Result *res = new Result();			//TODO delete result in epollresult
 			res->setMessage(graphmsg);
 			res->setStatus(true);
@@ -114,7 +119,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				Node *e = new Node(msg.destination().x(), msg.destination().y());
 				std::vector<Edge*> buff( this->cnn->buffer );
 
-				Message *graphmsg = new Message( this->cnn->cfd, buff, s, e, this->retq );		//TODO check delete
+				Message *graphmsg = new Message( this->cnn, buff, s, e, this->retq );		//TODO check delete
 
 				this->cnn->buffer.clear();			//clears Edge cache as they are sent to graphworker
 
@@ -131,7 +136,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				Node *s = new Node(msg.origin().x(), msg.origin().y());
 				std::vector<Edge*> buff(this->cnn->buffer);
 
-				Message *graphmsg = new Message(this->cnn->cfd, buff, s, this->retq);
+				Message *graphmsg = new Message(this->cnn, buff, s, this->retq);
 
 				this->cnn->buffer.clear();
 

@@ -29,7 +29,6 @@ bool EpollGraphMessage::handleEvent(uint32_t events){
 
 	//cancel event
 	uint64_t tmp;
-	//different threads clearing the message could cause some messages to be ignored?
 	read(this->get_fd(), &tmp, sizeof(tmp));
 
 	if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {

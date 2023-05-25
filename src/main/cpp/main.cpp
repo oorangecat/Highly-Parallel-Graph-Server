@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
 	EpollServer server(1222,NETTHREADS, netQueues);
 
 	epoll.registerEpollEntry(server);
-	cout << "\nServer listening at port 1234\n";
+	cout << "\nServer listening at port 1222\n";
 
 	while(1){
 		epoll.waitAndHandleEvents();

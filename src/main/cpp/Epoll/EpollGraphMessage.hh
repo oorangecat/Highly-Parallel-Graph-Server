@@ -15,6 +15,7 @@
 #include "../Graph/Message.hh"
 #include "../Graph/Graph.hh"
 #include "MessageQueue/MessageQueue.hh"
+#include "./Connection.hh"
 
 class EpollGraphMessage : public EpollEntry  {
 		EpollInstance *inst;

@@ -16,37 +16,37 @@ EpollResult::~EpollResult(){
 	delete(this->resQueue);
 };
 
-void writeAnswer(Response serializedStr, int cfd) {
+void writeAnswer(Response serializedStr, conn_t *conn) {
 #if DEBUG==true
-	std::cout<<"Writing answer to conn: "<<cfd<<std::endl;
+	std::cout<<"Writing answer to conn: "<<conn->cfd<<std::endl;
 #endif
-	std::string serialized;
-	serializedStr.SerializeToString(&serialized);
+	std::string serialized = serializedStr.SerializeAsString();
 	uint32_t size = htonl(serialized.size());  // Convert size to big-endian
 
 	// Write the size in big-endian format
-	ssize_t bytesWritten = write(cfd, &size, sizeof(size));
+	conn->connmut.lock();
+	ssize_t bytesWritten = write(conn->cfd, &size, sizeof(size));
 	if (bytesWritten != sizeof(size)) {
 		std::cerr << "Error writing size to file descriptor." << std::endl;
-		return;
+		//return;
 	}
 
 	// Write the serialized string
-	bytesWritten = write(cfd, serialized.data(), serialized.size());
+	bytesWritten = write(conn->cfd, serialized.c_str(), serialized.size());
 	if (bytesWritten != serialized.size()) {
 		std::cerr << "Error writing serialized string to file descriptor." << std::endl;
 		return;
-
 	}
+	conn->connmut.unlock();
 }
 
 bool EpollResult::handleEvent(uint32_t events) {
 
 	//cancel event
-	/*
+
 	uint64_t tmp;
 	read(this->get_fd(), &tmp, sizeof(tmp));
-*/
+
 
 	if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {
 		return false;
@@ -57,7 +57,7 @@ bool EpollResult::handleEvent(uint32_t events) {
 
 		if(res!=nullptr){
 			Message *msg = (*res)->getMsg();
-			int cfd = msg->get_cfd();							//fd of the connection to be answered to
+			conn_t* conn = msg->get_conn(); //connection to be answered to
 
 			Response response;
 
@@ -69,13 +69,14 @@ bool EpollResult::handleEvent(uint32_t events) {
 				response.set_status(Response_Status_ERROR);
 			} else {
 				response.set_status(Response_Status_OK);
-				if ((*res)->getTotalLen() != 0) {
-					response.set_total_length((*res)->getTotalLen());
-				} else if ((*res)->getShortestPath() != 0) {
-					response.set_shortest_path_length((*res)->getShortestPath());
-				}
 			}
-			writeAnswer(response,cfd);
+			//	if ((*res)->getTotalLen() != 0) {
+					response.set_total_length((*res)->getTotalLen());
+			//	} else if ((*res)->getShortestPath() != 0) {
+					response.set_shortest_path_length((*res)->getShortestPath());
+			//	}
+
+			writeAnswer(response,conn);
 
 
 

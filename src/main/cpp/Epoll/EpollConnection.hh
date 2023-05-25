@@ -19,17 +19,14 @@
 #include "MessageQueue/MessageQueue.hh"
 #include "../Graph/Result.hh"
 #include "../proto/locations.pb.h"
+#include "./Connection.hh"
 
 #include <vector>
 #include <mutex>
 
 
 
-typedef struct conn{
-		int cfd;
-		std::vector<Edge*> buffer;
-		int len = 0;
-}conn_t;
+
 
 
 class EpollConnection : public EpollEntry{

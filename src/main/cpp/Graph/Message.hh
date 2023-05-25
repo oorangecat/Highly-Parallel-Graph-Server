@@ -14,11 +14,15 @@
 #include "../Config.hh"
 #include "Result.hh"
 #include "../Epoll/MessageQueue/MessageQueue.hh"
+#include "../Epoll/Connection.hh"
+
+
+
 
 class Message {
 		bool RESET = false;
 
-		int cfd;
+		conn_t *conn;
 		std::vector<Edge*> walks;
 		Node *source;
 		std::vector<Node*> dest;
@@ -26,28 +30,28 @@ class Message {
 		MessageQueue<Result*> *retqueue;		//used to return result when ready
 
 public:
-		Message(int cfd, std::vector<Edge*> walks, Node *source, std::vector<Node*> dest,	MessageQueue<Result*> *retq ){
+		Message(conn_t *cfd, std::vector<Edge*> walks, Node *source, std::vector<Node*> dest,	MessageQueue<Result*> *retq ){
 			this->walks = walks; this->source = source; this->dest = dest; this->retqueue = retq;
 		}
 
-		Message(int cfd, std::vector<Edge*> walks, Node *source, std::vector<Node*> dest, 	MessageQueue<Result*> *retq, bool res){
+		Message(conn_t *cfd, std::vector<Edge*> walks, Node *source, std::vector<Node*> dest, 	MessageQueue<Result*> *retq, bool res){
 			this->walks = walks; this->source = source; this->dest = dest; this->retqueue = retq;
-			this->RESET = res;this->cfd = cfd;
+			this->RESET = res;this->conn = cfd;
 		}
 
 		Message() = default;
 
-		Message(int cfd, std::vector<Edge*> walks, Node *source, 	MessageQueue<Result*> *retq) {
-			this->cfd = cfd; this->walks = walks; this->source = source; this->retqueue = retq;
+		Message(conn_t *cfd, std::vector<Edge*> walks, Node *source, 	MessageQueue<Result*> *retq) {
+			this->conn = cfd; this->walks = walks; this->source = source; this->retqueue = retq;
 		}
 
-		Message(int cfd, bool res) {
-			this->cfd = cfd; this->RESET = res;
+		Message(conn_t *cfd, bool res) {
+			this->conn = cfd; this->RESET = res;
 		}
 
 
-		Message(int cfd, std::vector<Edge*> walks, Node *source, Node* dest, 	MessageQueue<Result*> *retq){
-			this->cfd = cfd; this->walks = walks; this->source=source, this->dest.push_back(dest); this->retqueue=retq;
+		Message(conn_t *cfd, std::vector<Edge*> walks, Node *source, Node* dest, 	MessageQueue<Result*> *retq){
+			this->conn = cfd; this->walks = walks; this->source=source, this->dest.push_back(dest); this->retqueue=retq;
 		}
 
 
@@ -59,7 +63,8 @@ public:
 		void setSource(Node* n) {this->source = n;};
 		Node* getSource(){ return this->source;};
 		bool isToMany(){ return this->dest.size() != 1;};
-		int get_cfd(){return this->cfd;};
+		int get_cfd(){return this->conn->cfd;};
+		conn_t *get_conn(){return this->conn;};
 		MessageQueue<Result*> *getResQueue(){ return this->retqueue;};
 
 };

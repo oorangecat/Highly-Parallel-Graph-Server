@@ -232,7 +232,7 @@ uint64_t Graph::shortestToAll(Node *source){
 	std::cout<<"to-all-source: "<<source<<std::endl;
 #endif
 
-	std::unordered_map<Node*, uint32_t> currentNodes;	//for node distances
+	std::unordered_map<Node*, uint64_t> currentNodes;	//for node distances
 	std::priority_queue<Edge*> nextEdges;
 
 	currentNodes.insert(std::make_pair(source, 0));
@@ -254,20 +254,18 @@ uint64_t Graph::shortestToAll(Node *source){
 		auto adist = currentNodes.find(a);
 
 		if(adist == currentNodes.end()){
-
-
 			continue;											//TODO throw error, graph broken
 		}
 
 		if(res == currentNodes.end()){			//if destination is not yet in the map, add it
-			currentNodes[b]= adist->second + e->getDist();
+			currentNodes[b] = adist->second + e->getDist();
 			edges = b->getEdges();
 			for(auto e: *edges)
 				nextEdges.push(e.second);		//add all its edges
 
 		} else {											//if we already have it in the map
 			if(res->second > adist->second + e->getDist()){
-				currentNodes[b]=adist->second + e->getDist();
+				currentNodes[b] = adist->second + e->getDist();
 				edges = b->getEdges();
 
 				for(auto e: *edges)
@@ -321,10 +319,10 @@ uint64_t Graph::sumPath(std::unordered_map<Node*, Node*> *parent, Node* source, 
 
 }
 
-uint64_t Graph::sumMap(std::unordered_map<Node*,uint32_t> *map){
+uint64_t Graph::sumMap(std::unordered_map<Node*,uint64_t> *map){
 	uint64_t sum=0;
 	for(auto e:*map){
-		sum+=e.second;
+		sum += e.second;
 	}
 	return sum;
 }

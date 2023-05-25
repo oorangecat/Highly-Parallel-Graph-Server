@@ -45,7 +45,7 @@ class Graph {
 #endif
 
 		uint64_t sumPath(std::unordered_map<Node*, Node*> *parent, Node* source, Node* dest);
-		uint64_t sumMap(std::unordered_map<Node*,uint32_t> *map);
+		uint64_t sumMap(std::unordered_map<Node*,uint64_t> *map);
 
 public:
 		Graph() {

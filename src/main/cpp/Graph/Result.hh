@@ -24,11 +24,11 @@ public:
 
 		Result() = default;
 
-		void setStatus(bool s) {this->status=s;};
-		void setMessage(Message* m){this->msg=m;};
-		void setShortest(uint64_t s){this->shortest_path = s;};
-		void setTotLen(uint64_t t){this->total_len=t;};
-		void setErrStr(char* s){this->errstr=s;};
+		void setStatus(bool s) {this->status = s;};
+		void setMessage(Message* m){this->msg = m;};
+		void setShortest(uint64_t sp){this->shortest_path = sp;};
+		void setTotLen(uint64_t t){this->total_len = t;};
+		void setErrStr(char* s){this->errstr = s;};
 
 		bool getStatus()  {return status;}
 

@@ -56,8 +56,8 @@ bool EpollGraphMessage::handleEvent(uint32_t events){
 				Node *dest = this->graph->closestPoint(rec->getDest().front());
 				uint64_t mindist = this->graph->shortestToOne(source, dest);
 
-				res->setStatus(!(mindist==0));
 				res->setShortest(mindist);
+				res->setStatus( !(mindist==0) );
 
 			} else {														//ONE-TO-ALL route
 				Node *source = this->graph->closestPoint(rec->getSource());

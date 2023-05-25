@@ -123,13 +123,12 @@ uint64_t Graph::shortestToOne(Node *s, Node *d){
 
 	pthread_rwlock_unlock(&(this->rwlock));
 
-
-
+	uint64_t retval = dest->getDistance();
 #if DEBUG==true
-	std::cout<<"shortest_path_ONETOONE "<< source->hash() << " : "<< dest->hash() << " = " << dest->getDistance()  << "\t Points: "<<this->pointmap->size()<<std::endl;
+	std::cout<<"shortest_path_ONETOONE "<< source->hash() << " : "<< dest->hash() << " = " << retval << "\t Points: "<<this->pointmap->size()<<std::endl;
 #endif
 
-	return dest->getDistance();
+	return retval;
 }
 
 

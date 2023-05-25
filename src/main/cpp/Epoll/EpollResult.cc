@@ -42,11 +42,6 @@ void writeAnswer(Response serializedStr, conn_t *conn) {
 
 bool EpollResult::handleEvent(uint32_t events) {
 
-	//cancel event
-
-	uint64_t tmp;
-	read(this->get_fd(), &tmp, sizeof(tmp));
-
 
 	if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {
 		return false;
@@ -61,9 +56,6 @@ bool EpollResult::handleEvent(uint32_t events) {
 
 			Response response;
 
-#if DEBUG == true
-			std::cout<<"Received result ONETOONE: "<<(*res )->getShortestPath() <<" ONETOALL: "<<(*res)->getTotalLen()<<std::endl;
-#endif
 
 			if(!(*res)->getStatus()){
 				response.set_status(Response_Status_ERROR);
@@ -71,10 +63,14 @@ bool EpollResult::handleEvent(uint32_t events) {
 				response.set_status(Response_Status_OK);
 			}
 			//	if ((*res)->getTotalLen() != 0) {
-					response.set_total_length((*res)->getTotalLen());
+			response.set_total_length((*res)->getTotalLen());
 			//	} else if ((*res)->getShortestPath() != 0) {
-					response.set_shortest_path_length((*res)->getShortestPath());
+			response.set_shortest_path_length((*res)->getShortestPath());
 			//	}
+
+#if DEBUG == true
+			std::cout<<"Received result ONETOONE: "<<response.shortest_path_length() <<" should be " << (*res)->getShortestPath()<<" ONETOALL: "<<response.total_length()<<std::endl;
+#endif
 
 			writeAnswer(response,conn);
 

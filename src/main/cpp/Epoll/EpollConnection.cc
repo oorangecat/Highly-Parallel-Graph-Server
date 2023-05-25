@@ -98,6 +98,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 			Result *res = new Result();			//TODO delete result in epollresult
 			res->setMessage(graphmsg);
 			res->setStatus(true);
+			res->setShortest(0);
 			this->retq->push(res);
 
 			return true;

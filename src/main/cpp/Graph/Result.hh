@@ -16,15 +16,17 @@ class Result {
 private:
 		bool status; //true OK (0) false ERROR(1)
 		Message* msg = nullptr;
-		uint64_t shortest_path = -1;
+		uint64_t shortest_path = -1;			//uint max
 		uint64_t total_len = -1;
 		char* errstr = nullptr;
+
 public:
+
 		Result() = default;
 
 		void setStatus(bool s) {this->status=s;};
 		void setMessage(Message* m){this->msg=m;};
-		void setShortest(uint64_t s){this->shortest_path=s;};
+		void setShortest(uint64_t s){this->shortest_path = s;};
 		void setTotLen(uint64_t t){this->total_len=t;};
 		void setErrStr(char* s){this->errstr=s;};
 
@@ -32,9 +34,9 @@ public:
 
 		Message *getMsg()  {	return msg;	}
 
-		uint64_t getShortestPath() {return shortest_path;}
+		uint64_t getShortestPath() {return this->shortest_path;}
 
-		uint64_t getTotalLen()  {return total_len;	}
+		uint64_t getTotalLen()  {return this->total_len;	}
 
 		char *getErrstr() {	return errstr;}
 

@@ -43,22 +43,27 @@ void writeAnswer(Response serializedStr, int cfd) {
 bool EpollResult::handleEvent(uint32_t events) {
 
 	//cancel event
+	/*
 	uint64_t tmp;
 	read(this->get_fd(), &tmp, sizeof(tmp));
+*/
 
-#if DEBUG == true
-	printf("Received result from graphworker\n");
-	fflush(stdout);
-#endif
 	if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {
 		return false;
 	} else {
+
 		Result **res = this->resQueue->pop();
+
+
 		if(res!=nullptr){
 			Message *msg = (*res)->getMsg();
 			int cfd = msg->get_cfd();							//fd of the connection to be answered to
 
 			Response response;
+
+#if DEBUG == true
+			std::cout<<"Received result ONETOONE: "<<(*res )->getShortestPath() <<" ONETOALL: "<<(*res)->getTotalLen()<<std::endl;
+#endif
 
 			if(!(*res)->getStatus()){
 				response.set_status(Response_Status_ERROR);

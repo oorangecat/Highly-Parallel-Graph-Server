@@ -53,7 +53,7 @@ public:
 		double ddistance(uint32_t x, uint32_t y);
 
 
-			int32_t edgeDist(Node *other);
+		int32_t edgeDist(Node *other);
 
 		void addEdge(Edge *w);
 		std::unordered_map<Node*, Edge*> *getEdges( ) { return this->edges; };

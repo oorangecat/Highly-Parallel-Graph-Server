@@ -29,14 +29,14 @@ bool EpollIncoming::handleEvent(uint32_t events){
 	printf("NetThread %d received a new connection\n", this->get_fd());
 	fflush(stdout);
 #endif
-	uint64_t tmp;
+	uint64_t tmp;			//discarding event
 	read(this->get_fd(), &tmp, sizeof(tmp));
+
 	int *rec;
 
 	if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {
 		return false;
 	} else {
-		//ssize_t count = read(this->t_fd, &rec, sizeof(rec));	//PIPE approach discarded
 
 		rec = this->inqueue->pop();		//TODO check performance, includes blocking op for mutex
 

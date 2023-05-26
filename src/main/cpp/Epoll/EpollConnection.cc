@@ -24,8 +24,8 @@ EpollConnection::EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue, 
 }
 
 EpollConnection::~EpollConnection() noexcept {
+	close(this->cnn->cfd);
 	delete(this->cnn);
-
 }
 
 void EpollConnection::writeAnswer(Response serializedStr, conn_t *conn) {
@@ -70,17 +70,13 @@ bool EpollConnection::handleEvent(uint32_t events) {
 		return false;
 
 	} else {
-		this->cnn->connmut.lock();
 		count = read(this->cnn->cfd, &msgSize, sizeof(msgSize));
 
 		if(count < 0){
-			/*throw std::runtime_error(
+			throw std::runtime_error(
 							std::string("connection message size read: ") + std::strerror(errno));
-			exit(1);*/
-			this->cnn->connmut.unlock();
 			return true;
 		} else if (count == 0) {
-			this->cnn->connmut.unlock();
 
 			return false;
 		}
@@ -102,17 +98,15 @@ bool EpollConnection::handleEvent(uint32_t events) {
 			totalRead += count;
 		}
 
-		this->cnn->connmut.unlock();
 
 #if DATADEBUG == true
 		std::cout <<"Actual read "<<totalRead<<" bytes on connection "<<this->cnn->cfd<<std::endl;
 #endif
 
 		if(count <= 0){
-			/*
 			throw std::runtime_error(
 							std::string("connection message  read: ") + std::strerror(errno));
-			exit(1);*/
+			exit(1);
 			return true;
 		}
 
@@ -129,7 +123,6 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				for(auto e : edges)
 					this->cnn->buffer.push_back(e);
 
-			Message *graphmsg = new Message(this->cnn, false);
 			response.set_status(Response_Status_OK);
 
 
@@ -147,11 +140,16 @@ bool EpollConnection::handleEvent(uint32_t events) {
 					this->cnn->buffer.clear();
 					this->graph->addWalkVector(buff);
 				}
-				Node *s = this->graph->closestPoint(msg.origin().x(), msg.origin().y());									//TODO check memory leak
-				Node *e= this->graph->closestPoint(msg.destination().x(), msg.destination().y());
-				uint64_t shortest = graph->shortestToOne(s, e);
-				response.set_status(Response_Status_OK);
-				response.set_shortest_path_length(shortest);
+				Node *s = this->graph->closestPoint(msg.origin().x(), msg.origin().y());
+				Node *e = this->graph->closestPoint(msg.destination().x(), msg.destination().y());
+				if(s!= nullptr && e != nullptr) {
+
+					uint64_t shortest = graph->shortestToOne(s, e);
+					response.set_status(Response_Status_OK);
+					response.set_shortest_path_length(shortest);
+				} else {
+					response.set_status(Response_Status_ERROR);
+				}
 
 
 			} else if (req.has_onetoall()){			//ONE-TO-ALL ROUTE
@@ -166,11 +164,16 @@ bool EpollConnection::handleEvent(uint32_t events) {
 					this->cnn->buffer.clear();
 					this->graph->addWalkVector(buff);
 				}
-				Node *s = this->graph->closestPoint(msg.origin().x(), msg.origin().y());
 
-				uint64_t shortest = graph->shortestToAll(s);
-				response.set_status(Response_Status_OK);
-				response.set_total_length(shortest);
+				Node *s = this->graph->closestPoint(msg.origin().x(), msg.origin().y());
+				if(s!=nullptr) {
+
+					uint64_t shortest = graph->shortestToAll(s);
+					response.set_status(Response_Status_OK);
+					response.set_total_length(shortest);
+				} else {
+					response.set_status(Response_Status_ERROR);
+				}
 			} else
 				return false;
 
@@ -189,22 +192,17 @@ std::vector<Edge*> parseEdges(Request req){
 	std::vector<Edge*> res;
 
 	Location loc1, loc2;
-
-	for(int i = 0; i < n-1; i++) {
-		loc1 = walk.locations(i);
-		loc2 = walk.locations(i+1);
-		Node *a = new Node(loc1.x(), loc1.y());			//Node created here
+	Node *prev = new Node(walk.locations(0).x(), walk.locations(0).y());
+	for(int i = 1; i < n; i++) {
+		loc2 = walk.locations(i);
 		Node *b = new Node(loc2.x(), loc2.y());
-		Edge *e = new Edge(a,b,walk.lengths(i));
+		Edge *e = new Edge(prev,b,walk.lengths(i-1));
+		prev = b;
 		res.push_back(e);
 	}
 
 	return res;
 
-}
-
-std::vector<Node> parseMany(Request req){
-	//TODO implement parsing many destinations
 }
 
 Request EpollConnection::parseProtobuf(std::vector<char> *buff, int count){

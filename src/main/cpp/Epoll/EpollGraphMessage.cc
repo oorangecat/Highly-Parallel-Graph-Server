@@ -3,10 +3,7 @@
 //
 
 #include "EpollGraphMessage.hh"
-//TODO implement graph parallelism via RCU in Worker
-/*
- * Threads are registered for RCU in GraphWorker
- */
+
 
 EpollGraphMessage::EpollGraphMessage(EpollInstance *inst, MessageQueue<Message*> *inq, Graph *g) {
 

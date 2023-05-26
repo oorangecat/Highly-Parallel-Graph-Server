@@ -47,7 +47,6 @@ public:
 		void setHash(uint64_t h){ this->chash=h;};
 
 
-		//TODO [mm] precision, might be improved with fp result (worth it?)
 		uint32_t distance(uint32_t x, uint32_t y);
 		int32_t distance(Node *other);
 		double ddistance(uint32_t x, uint32_t y);

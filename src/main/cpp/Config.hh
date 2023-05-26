@@ -1,5 +1,5 @@
-#define NETTHREADS 1
-#define GRAPHTTREADS 1
+#define NETTHREADS 2
+#define GRAPHTTREADS 0
 
 #define RTREENODES 16
 #define DEBUG true

@@ -40,7 +40,7 @@ bool EpollIncoming::handleEvent(uint32_t events){
 
 		rec = this->inqueue->pop();		//TODO check performance, includes blocking op for mutex
 
-		if(rec!=nullptr) {
+		if(rec != nullptr) {
 			conn_t *newconn = new conn_t;
 			newconn->cfd = *rec;
 

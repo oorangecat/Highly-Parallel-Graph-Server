@@ -35,22 +35,20 @@ Node *PointMap::addPoint(Node *point){
 #endif
 
 		auto res = this->grid->find(ringid);
-		Node *n = new Node(point->x_(), point->y_());
+		//Node *n = new Node(point->x_(), point->y_());
 
 		if(res==this->grid->end()) {
 			vector<Node *> *v = new vector<Node *>();
-			v->push_back(n);
+			v->push_back(point);
 			this->grid->insert(std::make_pair(ringid, v));
 		} else {
-			res->second->push_back(n);
+			res->second->push_back(point);
 		}
 			this->ssize++;
-			delete (point);
 
-			return n;
+		return point;
 
 	} else {
-		delete(point);
 		return closest;
 	}
 

@@ -27,10 +27,7 @@ public:
 		NetWorker(MessageQueue<int> *inq, MessageQueue<Message*> *graphQueue, Graph *g);
 		~NetWorker();
 
-
 		void threadMain();
-
-
 
 
 };

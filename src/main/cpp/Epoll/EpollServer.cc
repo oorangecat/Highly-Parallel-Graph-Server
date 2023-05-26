@@ -65,10 +65,7 @@ EpollServer::EpollServer(uint16_t port, int nth, MessageQueue<int> **threads) {
 
 
 EpollServer::~EpollServer() {
-	/*		PIPES approach discarded
-	for(int i=0; i<nthreads; i++){
-		close(threads_fd[i]);
-	}*/
+
 	delete(thqueues);
 	delete(this);
 }

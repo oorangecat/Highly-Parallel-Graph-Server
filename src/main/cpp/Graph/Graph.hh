@@ -35,7 +35,6 @@
 
 
 
-//TODO implement graph parallelism via RCU in Graph class
 class Graph {
 		PointMap *pointmap;
 #if USERCU == true

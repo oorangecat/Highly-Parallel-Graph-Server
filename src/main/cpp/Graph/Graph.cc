@@ -29,6 +29,9 @@ void Graph::addWalkVector(std::vector<Edge*> walks) {
 	for(auto el : walks) {			//TODO optimize, reuse previous
 		a =	this->pointmap->addPoint(el->getA());
 		b = this->pointmap->addPoint(el->getB());
+		if(a!=el->getA())
+			delete(el->getA());
+
 		el->setA(a);
 		el->setB(b);
 		a->addEdge(el);
@@ -255,7 +258,7 @@ uint64_t Graph::shortestToAll(Node *source){
 		auto adist = currentNodes.find(a);
 
 		if(adist == currentNodes.end()){
-			continue;											//TODO throw error, graph broken
+			return 0;											//TODO throw error, graph broken
 		}
 
 		if(res == currentNodes.end()){			//if destination is not yet in the map, add it

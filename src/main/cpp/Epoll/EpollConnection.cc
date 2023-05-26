@@ -27,10 +27,10 @@ EpollConnection::~EpollConnection() noexcept {
 	close(this->cnn->cfd);
 	delete(this->cnn);
 }
-
+int type=0;
 bool EpollConnection::writeAnswer(Response serializedStr, conn_t *conn) {
 #if DEBUG==true
-	std::cout<<"Writing answer to conn: "<<conn->cfd<<std::endl;
+	std::cout<<"Writing answer to conn: "<<conn->cfd<<" type: "<<type<<std::endl;
 #endif
 	fflush(stdout);
 	std::string serialized = serializedStr.SerializeAsString();
@@ -41,14 +41,14 @@ bool EpollConnection::writeAnswer(Response serializedStr, conn_t *conn) {
 	// Write the size in big-endian format
 	ssize_t bytesWritten = write(conn->cfd, &size, sizeof(size));
 	if (bytesWritten != sizeof(size)) {
-		std::cerr << "Error writing size to file descriptor." << std::endl;
+		std::cerr << "Error writing size to file descriptor:" <<  std::strerror(errno)<< std::endl;
 		//return;
 	}
 
 	// Write the serialized string
 	bytesWritten = write(conn->cfd, serialized.c_str(), serialized.size());
 	if (bytesWritten != serialized.size()) {
-		std::cerr << "Error writing serialized string to file descriptor." << std::endl;
+		std::cerr << "Error writing serialized string to file descriptor:" <<  std::strerror(errno)<< std::endl;
 		return false;
 	}
 
@@ -66,13 +66,13 @@ bool EpollConnection::handleEvent(uint32_t events) {
 	int count;
 
 	if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {
-
+		delete(this);
 		return false;
 
 	} else {
 		count = read(this->cnn->cfd, &msgSize, sizeof(msgSize));
 
-		if(count < 0){
+		if (count < 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				return true;
 			} else {
@@ -88,7 +88,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 #if DATADEBUG == true
 		std::cout<<msgSize<<" bytes of data received on connection "<<this->cnn->cfd<<std::endl;
 #endif
-		std::vector<char> buff(msgSize+1);
+		std::vector<char> buff(msgSize + 1);
 
 		uint32_t totalRead = 0;
 		while (totalRead < msgSize) {
@@ -105,7 +105,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 		std::cout <<"Actual read "<<totalRead<<" bytes on connection "<<this->cnn->cfd<<std::endl;
 #endif
 
-		if(count <= 0){
+		if (count < 0) {
 			if (errno == EAGAIN || errno == EWOULDBLOCK) {
 				return true;
 			} else {
@@ -113,77 +113,91 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				throw std::runtime_error(
 								std::string("connection message  read: ") + std::strerror(errno));
 			}
+		} else if (count == 0) {
+			close(this->get_fd());
+			return false;
 		}
+
 
 		Request req = parseProtobuf(&buff, msgSize);
 		Response response;
 
-		if(req.has_walk()){									//WALK ROUTE
+		if (req.has_walk()) {                  //WALK ROUTE
 #if DATADEBUG == true
-				printf("Received WALK on connection %d\n", this->cnn->cfd);
-				fflush(stdout);
+			printf("Received WALK on connection %d\n", this->cnn->cfd);
+			fflush(stdout);
 #endif
 
-				std::vector<Edge*> edges = parseEdges(req);
-				for(auto e : edges)
-					this->cnn->buffer.push_back(e);
+			std::vector<Edge *> edges = parseEdges(req);
+			for (auto e: edges)
+				this->cnn->buffer.push_back(e);
 
 			response.set_status(Response_Status_OK);
+			type=1;
 
 
-			} else if (req.has_onetoone()){			//ONE-TO-ONE ROUTE
+		} else if (req.has_onetoone()) {      //ONE-TO-ONE ROUTE
 
 #if DEBUG == true
-			std::cout<<"Received ONE-TO-ONE on connection "<< this->cnn->cfd <<" | queue: "<< this->outq->get_fd()<<std::endl;
+			std::cout << "Received ONE-TO-ONE on connection " << this->cnn->cfd << " | queue: " << this->outq->get_fd()
+								<< std::endl;
 #endif
 
-				OneToOne msg = req.onetoone();
+			OneToOne msg = req.onetoone();
 
-				if(this->cnn->buffer.size() >0) {
-					std::vector<Edge *> buff(this->cnn->buffer);
+			if (this->cnn->buffer.size() > 0) {
+				std::vector<Edge *> buff(this->cnn->buffer);
 
-					this->cnn->buffer.clear();
-					this->graph->addWalkVector(buff);
-				}
-				Node *s = this->graph->closestPoint(msg.origin().x(), msg.origin().y());
-				Node *e = this->graph->closestPoint(msg.destination().x(), msg.destination().y());
-				if(s!= nullptr && e != nullptr) {
+				this->cnn->buffer.clear();
+				this->graph->addWalkVector(buff);
+			}
+			Node *s = this->graph->closestPoint(msg.origin().x(), msg.origin().y());
+			Node *e = this->graph->closestPoint(msg.destination().x(), msg.destination().y());
+			if (s != nullptr && e != nullptr) {
 
-					uint64_t shortest = graph->shortestToOne(s, e);
-					response.set_status(Response_Status_OK);
-					response.set_shortest_path_length(shortest);
-				} else {
-					response.set_status(Response_Status_ERROR);
-				}
+				uint64_t shortest = graph->shortestToOne(s, e);
+				response.set_status(Response_Status_OK);
+				response.set_shortest_path_length(shortest);
+			} else {
+				response.set_status(Response_Status_ERROR);
+			}
+			type=2;
 
-
-			} else if (req.has_onetoall()){			//ONE-TO-ALL ROUTE
+		} else if (req.has_onetoall()) {      //ONE-TO-ALL ROUTE
 #if DEBUG == true
-				printf("Received one-to-all on connection %d\n", this->cnn->cfd);
-				fflush(stdout);
+			printf("Received one-to-all on connection %d\n", this->cnn->cfd);
+			fflush(stdout);
 #endif
-				OneToAll msg = req.onetoall();
-				if(this->cnn->buffer.size() >0) {
-					std::vector<Edge *> buff(this->cnn->buffer);
+			OneToAll msg = req.onetoall();
+			type=3;
+			if (this->cnn->buffer.size() > 0) {
+				std::vector<Edge *> buff(this->cnn->buffer);
 
-					this->cnn->buffer.clear();
-					this->graph->addWalkVector(buff);
-				}
+				this->cnn->buffer.clear();
+				this->graph->addWalkVector(buff);
+			}
 
-				Node *s = this->graph->closestPoint(msg.origin().x(), msg.origin().y());
-				if(s!=nullptr) {
+			Node *s = this->graph->closestPoint(msg.origin().x(), msg.origin().y());
+			if (s != nullptr) {
 
-					uint64_t shortest = graph->shortestToAll(s);
-					response.set_status(Response_Status_OK);
-					response.set_total_length(shortest);
-				} else {
-					response.set_status(Response_Status_ERROR);
-				}
-			} else
-				return false;
+				uint64_t shortest = graph->shortestToAll(s);
+				response.set_status(Response_Status_OK);
+				response.set_total_length(shortest);
+			} else {
+				response.set_status(Response_Status_ERROR);
+			}
+			writeAnswer(response, this->cnn);          //closing connectiona after one-to-all
+			//return false;
+		} else {
 
-		return writeAnswer(response, this->cnn);
-	//	return true;
+			return false;
+		}
+
+		if (writeAnswer(response, this->cnn)){
+			return true;
+		}else {
+			return false;
+		}
 	}
 }
 

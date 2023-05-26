@@ -4,7 +4,7 @@
 
 #ifndef SERVER_GRAPH_HH
 #define SERVER_GRAPH_HH
-#
+#include <unordered_map>
 
 #include "Edge.hh"
 #include "Node.hh"
@@ -37,11 +37,8 @@
 
 class Graph {
 		PointMap *pointmap;
-#if USERCU == true
-		std::mutex writelock;
-#elif USERCU == false
+		unordered_map<uint64_t,uint64_t> *cache;
 		pthread_rwlock_t rwlock;
-#endif
 
 		uint64_t sumPath(std::unordered_map<Node*, Node*> *parent, Node* source, Node* dest);
 		uint64_t sumMap(std::unordered_map<Node*,uint64_t> *map);
@@ -49,9 +46,8 @@ class Graph {
 public:
 		Graph() {
 			this->pointmap = new PointMap();
-#if USERCU==false
+			this->cache = new unordered_map<uint64_t,uint64_t>;
 			pthread_rwlock_init(&rwlock, NULL);
-#endif
 		};
 		void addWalkUnsync(Edge newWalk);
 		void addWalkVector(std::vector<Edge*> walks);

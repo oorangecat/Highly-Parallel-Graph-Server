@@ -46,6 +46,7 @@ EpollInstance::unregisterEpollEntry(EpollEntry &e) const
         throw std::runtime_error(
                 std::string("epoll_ctl: ") + std::strerror(errno));
     }
+		close(this->fd);
 }
 
 void

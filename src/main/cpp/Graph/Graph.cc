@@ -37,6 +37,7 @@ void Graph::addWalkVector(std::vector<Edge*> walks) {
 		a->addEdge(el);
 	}
 
+	this->cache->clear();
 	pthread_rwlock_unlock(&(this->rwlock));
 #if DEBUG==true
 	printf("\nAdding WRITE PROTECTED  done. Size now: %d\n\n", this->pointmap->size());
@@ -74,6 +75,10 @@ uint64_t Graph::shortestToOne(Node *s, Node *d){
 	Node *source = this->pointmap->closestPoint( s->x_(), s->y_() );
 	Node *dest = this->pointmap->closestPoint( d->x_(), d->y_() );
 
+	auto cacheret=this->cache->find((int64_t)source & (int64_t)dest);
+	if(cacheret != this->cache->end()) {
+		return cacheret->second;
+	}
 	pthread_rwlock_rdlock( &( this->rwlock ) );			//readlock on Graph
 
 	//TODO query cache before
@@ -133,6 +138,7 @@ uint64_t Graph::shortestToOne(Node *s, Node *d){
 	std::cout<<"shortest_path_ONETOONE "<< source->hash() << " : "<< dest->hash() << " = " << retval << "\t Points: "<<this->pointmap->size()<<std::endl;
 #endif
 
+	this->cache->insert(std::make_pair((int64_t)source & (int64_t)dest, retval));
 	return retval;
 }
 
@@ -228,7 +234,7 @@ uint64_t Graph::shortestToOne(Node *source, Node *dest){
 
 
 
-uint64_t Graph::shortestToAll(Node *source){
+uint64_t Graph::shortestToAll(Node *source) {
 
 	pthread_rwlock_rdlock( &( this->rwlock ) );			//readlock on Graph
 

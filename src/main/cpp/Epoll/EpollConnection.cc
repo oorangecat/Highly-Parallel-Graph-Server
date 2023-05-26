@@ -28,11 +28,22 @@ EpollConnection::~EpollConnection() noexcept {
 	delete(this->cnn);
 }
 int type=0;
+
+bool isFdValid(int fd) {
+	// Get the file status flags of the file descriptor
+	int flags = fcntl(fd, F_GETFL);
+
+	// If the file status flags can be retrieved, the file descriptor is valid
+	return (flags != -1);
+}
+
 bool EpollConnection::writeAnswer(Response serializedStr, conn_t *conn) {
 #if DEBUG==true
 	std::cout<<"Writing answer to conn: "<<conn->cfd<<" type: "<<type<<std::endl;
 #endif
 	fflush(stdout);
+	if(!isValid(conn->cfd))
+		return false;
 	std::string serialized = serializedStr.SerializeAsString();
 
 	fflush(stdout);
@@ -186,7 +197,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				response.set_status(Response_Status_ERROR);
 			}
 			writeAnswer(response, this->cnn);          //closing connectiona after one-to-all
-			//return false;
+			return false;
 		} else {
 
 			return false;

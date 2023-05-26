@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
 
 	for(int i=0; i<NETTHREADS; i++){
 		netQueues[i] = new MessageQueue<int>();
-		netw[i] = new NetWorker(netQueues[i], graphQueue);
+		netw[i] = new NetWorker(netQueues[i], graphQueue, graph);
 		tmp = new std::thread(&NetWorker::threadMain, netw[i]);
 		netth.push_back(tmp);
 	}

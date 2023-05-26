@@ -52,7 +52,9 @@ Node* Graph::closestPoint(Node *p){
 	return this->pointmap->closestPoint(p->x_(), p->y_());
 }
 
-
+Node* Graph::closestPoint(uint32_t x, uint32_t y) {
+	return this->pointmap->closestPoint(x, y);
+}
 
 
 #if STUPIDSHORTEST==false

@@ -14,18 +14,48 @@ std::vector<Edge*> parseEdges(Request req);
 std::vector<Node> parseMany(Request req);
 
 
-EpollConnection::EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue, MessageQueue<Result*> *retqueue) {
+EpollConnection::EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue, MessageQueue<Result*> *retqueue, Graph *g) {
 	this->cnn = cfd;
 	this->outq = outqueue;
 	this->retq = retqueue;
 	this->set_fd(this->cnn->cfd);
 	this->set_events(EPOLLIN);
+	this->graph = g;
 }
 
 EpollConnection::~EpollConnection() noexcept {
 	delete(this->cnn);
 
 }
+
+void EpollConnection::writeAnswer(Response serializedStr, conn_t *conn) {
+#if DEBUG==true
+	std::cout<<"Writing answer to conn: "<<conn->cfd<<std::endl;
+#endif
+	fflush(stdout);
+	std::string serialized = serializedStr.SerializeAsString();
+
+	fflush(stdout);
+	uint32_t size = htonl(serialized.size());  // Convert size to big-endian
+
+	// Write the size in big-endian format
+//	conn->connmut.lock();
+	ssize_t bytesWritten = write(conn->cfd, &size, sizeof(size));
+	if (bytesWritten != sizeof(size)) {
+		std::cerr << "Error writing size to file descriptor." << std::endl;
+		//return;
+	}
+
+	// Write the serialized string
+	bytesWritten = write(conn->cfd, serialized.c_str(), serialized.size());
+	if (bytesWritten != serialized.size()) {
+		std::cerr << "Error writing serialized string to file descriptor." << std::endl;
+		return;
+	}
+	//conn->connmut.unlock();
+
+	fflush(stdout);}
+
 
 bool EpollConnection::handleEvent(uint32_t events) {
 #if DATADEBUG == true
@@ -56,8 +86,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 		}
 
 		msgSize = ntohl(msgSize);
-		/*if (msgSize<0)
-			return true;*/
+
 #if DATADEBUG == true
 		std::cout<<msgSize<<" bytes of data received on connection "<<this->cnn->cfd<<std::endl;
 #endif
@@ -88,6 +117,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 		}
 
 		Request req = parseProtobuf(&buff, msgSize);
+		Response response;
 
 		if(req.has_walk()){									//WALK ROUTE
 #if DATADEBUG == true
@@ -100,13 +130,8 @@ bool EpollConnection::handleEvent(uint32_t events) {
 					this->cnn->buffer.push_back(e);
 
 			Message *graphmsg = new Message(this->cnn, false);
-			Result *res = new Result();			//TODO delete result in epollresult
-			res->setMessage(graphmsg);
-			res->setStatus(true);
-			res->setShortest(0);
-			this->retq->push(res);
+			response.set_status(Response_Status_OK);
 
-			return true;
 
 			} else if (req.has_onetoone()){			//ONE-TO-ONE ROUTE
 
@@ -115,17 +140,19 @@ bool EpollConnection::handleEvent(uint32_t events) {
 #endif
 
 				OneToOne msg = req.onetoone();
-				Node *s = new Node(msg.origin().x(), msg.origin().y());									//TODO check memory leak
-				Node *e = new Node(msg.destination().x(), msg.destination().y());
-				std::vector<Edge*> buff( this->cnn->buffer );
 
-				Message *graphmsg = new Message( this->cnn, buff, s, e, this->retq );		//TODO check delete
+				if(this->cnn->buffer.size() >0) {
+					std::vector<Edge *> buff(this->cnn->buffer);
 
-				this->cnn->buffer.clear();			//clears Edge cache as they are sent to graphworker
+					this->cnn->buffer.clear();
+					this->graph->addWalkVector(buff);
+				}
+				Node *s = this->graph->closestPoint(msg.origin().x(), msg.origin().y());									//TODO check memory leak
+				Node *e= this->graph->closestPoint(msg.destination().x(), msg.destination().y());
+				uint64_t shortest = graph->shortestToOne(s, e);
+				response.set_status(Response_Status_OK);
+				response.set_shortest_path_length(shortest);
 
-				outq->push(graphmsg);				//Sent new message to graphworker
-
-				return true;
 
 			} else if (req.has_onetoall()){			//ONE-TO-ALL ROUTE
 #if DEBUG == true
@@ -133,19 +160,22 @@ bool EpollConnection::handleEvent(uint32_t events) {
 				fflush(stdout);
 #endif
 				OneToAll msg = req.onetoall();
-				Node *s = new Node(msg.origin().x(), msg.origin().y());
-				std::vector<Edge*> buff(this->cnn->buffer);
+				if(this->cnn->buffer.size() >0) {
+					std::vector<Edge *> buff(this->cnn->buffer);
 
-				Message *graphmsg = new Message(this->cnn, buff, s, this->retq);
+					this->cnn->buffer.clear();
+					this->graph->addWalkVector(buff);
+				}
+				Node *s = this->graph->closestPoint(msg.origin().x(), msg.origin().y());
 
-				this->cnn->buffer.clear();
-
-				outq->push(graphmsg);
-
-				return true;
-
+				uint64_t shortest = graph->shortestToAll(s);
+				response.set_status(Response_Status_OK);
+				response.set_total_length(shortest);
 			} else
 				return false;
+
+		writeAnswer(response, this->cnn);
+		return true;
 	}
 }
 

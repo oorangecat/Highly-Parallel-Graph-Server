@@ -61,8 +61,10 @@ public:
 
 
 		Node* closestPoint(Node *p);
+		Node* closestPoint(uint32_t x, uint32_t y);
 
-		Node* addPoint(Node *p);
+
+			Node* addPoint(Node *p);
 
 		uint64_t shortestToOne(Node *source, Node *dest);
 		uint64_t shortestToAll(Node *source);

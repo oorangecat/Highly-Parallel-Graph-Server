@@ -22,8 +22,9 @@ class NetWorker {
 
 	MessageQueue<Message*> *graphQueue;
 	MessageQueue<Result*> *retQueue;
+	Graph *graph;
 public:
-		NetWorker(MessageQueue<int> *inq, MessageQueue<Message*> *graphQueue);
+		NetWorker(MessageQueue<int> *inq, MessageQueue<Message*> *graphQueue, Graph *g);
 		~NetWorker();
 
 

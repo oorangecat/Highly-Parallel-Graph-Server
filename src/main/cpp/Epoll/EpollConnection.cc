@@ -9,15 +9,14 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <vector>
+#include <fcntl.h>
 
 std::vector<Edge*> parseEdges(Request req);
 std::vector<Node> parseMany(Request req);
 
 
-EpollConnection::EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue, MessageQueue<Result*> *retqueue, Graph *g) {
+EpollConnection::EpollConnection(conn_t *cfd, Graph *g) {
 	this->cnn = cfd;
-	this->outq = outqueue;
-	this->retq = retqueue;
 	this->set_fd(this->cnn->cfd);
 	this->set_events(EPOLLIN);
 	this->graph = g;
@@ -42,7 +41,7 @@ bool EpollConnection::writeAnswer(Response serializedStr, conn_t *conn) {
 	std::cout<<"Writing answer to conn: "<<conn->cfd<<" type: "<<type<<std::endl;
 #endif
 	fflush(stdout);
-	if(!isValid(conn->cfd))
+	if(!isFdValid(conn->cfd))
 		return false;
 	std::string serialized = serializedStr.SerializeAsString();
 
@@ -149,8 +148,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 		} else if (req.has_onetoone()) {      //ONE-TO-ONE ROUTE
 
 #if DEBUG == true
-			std::cout << "Received ONE-TO-ONE on connection " << this->cnn->cfd << " | queue: " << this->outq->get_fd()
-								<< std::endl;
+			std::cout << "Received ONE-TO-ONE on connection "<< std::endl;
 #endif
 
 			OneToOne msg = req.onetoone();

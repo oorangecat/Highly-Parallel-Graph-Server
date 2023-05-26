@@ -15,7 +15,6 @@
 
 #include "EpollEntry.hh"
 #include "EpollInstance.hh"
-#include "../Graph/Message.hh"
 #include "MessageQueue/MessageQueue.hh"
 #include <sys/epoll.h>
 #include <vector>
@@ -25,12 +24,10 @@
 class EpollIncoming : public EpollEntry {
 		EpollInstance *inst;
 		MessageQueue<int> *inqueue;
-		MessageQueue<Message*> *outqueue;
-		MessageQueue<Result*> *retqueue;
 		Graph *graph;
 
 public:
-		EpollIncoming(EpollInstance *inst, MessageQueue<int> *inq, MessageQueue<Message*> *outq, MessageQueue<Result*> *retq, Graph *g);
+		EpollIncoming(EpollInstance *inst, MessageQueue<int> *inq,Graph *g);
 		~EpollIncoming();
 		bool handleEvent(uint32_t events);
 

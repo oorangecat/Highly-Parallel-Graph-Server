@@ -29,7 +29,7 @@ Node *PointMap::addPoint(Node *point){
 
 	if(closest == nullptr){
 		//uint64_t ringid = std::round(std::hypot((uint32_t)point->x_(), (uint32_t)point->y_())) / (GRIDWIDTH);
-		int64_t ringid=(point->x_()+point->y_())>>10;
+		int64_t ringid=(point->x_()+point->y_())>>SHIFTGRID;
 #if DEBUG == true
 	//	std::cout<<"Adding ("<<point->x_()<<","<<point->y_()<<") ringId "<<ringid<<"\n"<<std::endl;
 #endif

@@ -114,7 +114,6 @@ bool EpollConnection::handleEvent(uint32_t events) {
 								std::string("connection message  read: ") + std::strerror(errno));
 			}
 		} else if (count == 0) {
-			close(this->get_fd());
 			return false;
 		}
 

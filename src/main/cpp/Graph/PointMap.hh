@@ -8,12 +8,13 @@
 #include <unordered_map>
 #include <math.h>
 
-#include "QuadTree.hh"
 #include "Node.hh"
+
+using namespace std;
 
 class PointMap {
 	//QuadTree tree;
-		unordered_map<int64_t,vector<Node*>*> *grid;
+		unordered_map<int64_t,std::vector<Node*>*> *grid;
 		Node *zero;
 		int ssize = 0;			//number of nodes
 public:

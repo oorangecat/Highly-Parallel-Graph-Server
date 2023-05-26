@@ -1,4 +1,4 @@
-#define NETTHREADS 2
+#define NETTHREADS 8
 #define GRAPHTTREADS 0
 
 #define RTREENODES 16
@@ -11,10 +11,9 @@
 #define USERCU false
 #define STUPIDSHORTEST false
 
-#define QUADTREELIM 50000000
 
 
-#define GRIDWIDTH 5000 //141//.55339059 //707.1067812	//1m diagonal
+#define SHIFTGRID 10 //141//.55339059 //707.1067812	//1m diagonal
 #define MAXDIST 500
 
 #if DEBUG == true || TOONEDEBUG == true || TOALLDEBUG == true

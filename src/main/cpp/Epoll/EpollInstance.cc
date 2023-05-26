@@ -29,7 +29,7 @@ EpollInstance::registerEpollEntry(EpollEntry &e) const
 
     if (epoll_ctl(this->fd, EPOLL_CTL_ADD, e.get_fd(), &ev) == -1) {
         throw std::runtime_error(
-                std::string("epoll_ctl: ") + std::strerror(errno));
+                std::string("epoll_ctl register entry: ") + std::strerror(errno));
     }
 }
 
@@ -44,7 +44,7 @@ EpollInstance::unregisterEpollEntry(EpollEntry &e) const
 
     if (epoll_ctl(this->fd, EPOLL_CTL_DEL, e.get_fd(), &ev) == -1) {
         throw std::runtime_error(
-                std::string("epoll_ctl: ") + std::strerror(errno));
+                std::string("epoll_ctl unregister: ") + std::strerror(errno));
     }
 }
 
@@ -55,7 +55,7 @@ EpollInstance::waitAndHandleEvents(void) const
     int n = epoll_wait(this->fd, events, EPOLL_MAX_EVENTS, -1);
     if (n == -1) {
         throw std::runtime_error(
-                std::string("epoll_wait: ") + std::strerror(errno));
+                std::string("epoll_wait handle events: ") + std::strerror(errno));
     }
     for (int i = 0; i < n; i++) {
         EpollEntry *e = static_cast<EpollEntry *>(events[i].data.ptr);

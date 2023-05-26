@@ -37,7 +37,7 @@ class EpollConnection : public EpollEntry{
 		MessageQueue<Result*> *retq;
 		Request parseProtobuf(std::vector<char> *buff, int count);
 
-		void writeAnswer(Response serializedStr, conn_t *conn);
+		bool writeAnswer(Response serializedStr, conn_t *conn);
 
 public:
 		EpollConnection(conn_t *cfd, MessageQueue<Message*> *outqueue, MessageQueue<Result*> *retqueue, Graph *g);

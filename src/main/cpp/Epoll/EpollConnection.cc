@@ -28,7 +28,7 @@ EpollConnection::~EpollConnection() noexcept {
 	delete(this->cnn);
 }
 
-void EpollConnection::writeAnswer(Response serializedStr, conn_t *conn) {
+bool EpollConnection::writeAnswer(Response serializedStr, conn_t *conn) {
 #if DEBUG==true
 	std::cout<<"Writing answer to conn: "<<conn->cfd<<std::endl;
 #endif
@@ -39,7 +39,6 @@ void EpollConnection::writeAnswer(Response serializedStr, conn_t *conn) {
 	uint32_t size = htonl(serialized.size());  // Convert size to big-endian
 
 	// Write the size in big-endian format
-//	conn->connmut.lock();
 	ssize_t bytesWritten = write(conn->cfd, &size, sizeof(size));
 	if (bytesWritten != sizeof(size)) {
 		std::cerr << "Error writing size to file descriptor." << std::endl;
@@ -50,11 +49,12 @@ void EpollConnection::writeAnswer(Response serializedStr, conn_t *conn) {
 	bytesWritten = write(conn->cfd, serialized.c_str(), serialized.size());
 	if (bytesWritten != serialized.size()) {
 		std::cerr << "Error writing serialized string to file descriptor." << std::endl;
-		return;
+		return false;
 	}
-	//conn->connmut.unlock();
 
-	fflush(stdout);}
+	fflush(stdout);
+	return true;
+}
 
 
 bool EpollConnection::handleEvent(uint32_t events) {
@@ -73,11 +73,13 @@ bool EpollConnection::handleEvent(uint32_t events) {
 		count = read(this->cnn->cfd, &msgSize, sizeof(msgSize));
 
 		if(count < 0){
-			throw std::runtime_error(
-							std::string("connection message size read: ") + std::strerror(errno));
-			return true;
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				return true;
+			} else {
+				throw std::runtime_error(
+								std::string("connection message size read: ") + std::strerror(errno));
+			}
 		} else if (count == 0) {
-
 			return false;
 		}
 
@@ -104,10 +106,13 @@ bool EpollConnection::handleEvent(uint32_t events) {
 #endif
 
 		if(count <= 0){
-			throw std::runtime_error(
-							std::string("connection message  read: ") + std::strerror(errno));
-			exit(1);
-			return true;
+			if (errno == EAGAIN || errno == EWOULDBLOCK) {
+				return true;
+			} else {
+
+				throw std::runtime_error(
+								std::string("connection message  read: ") + std::strerror(errno));
+			}
 		}
 
 		Request req = parseProtobuf(&buff, msgSize);
@@ -177,8 +182,8 @@ bool EpollConnection::handleEvent(uint32_t events) {
 			} else
 				return false;
 
-		writeAnswer(response, this->cnn);
-		return true;
+		return writeAnswer(response, this->cnn);
+	//	return true;
 	}
 }
 

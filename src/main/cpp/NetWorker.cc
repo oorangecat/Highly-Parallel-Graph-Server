@@ -6,7 +6,6 @@
 #include "Config.hh"
 
 
-
 NetWorker::NetWorker(MessageQueue<int> *inq, Graph *g) {
 
 	this->inQueue = inq;
@@ -24,6 +23,7 @@ void NetWorker::threadMain() {
 
 	EpollInstance ep;
 	EpollIncoming einc(&ep, this->inQueue, this->graph);
+	signal(SIGPIPE, SIG_IGN);
 
 	ep.registerEpollEntry(einc);
 

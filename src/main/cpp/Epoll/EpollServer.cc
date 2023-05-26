@@ -132,19 +132,3 @@ bool EpollServer::writeToThread(int fd){
 	lastth = (lastth+1) % nthreads;
 	return true;
 }
-
-/*		//PIPES approach discarded
-//Deletes dead thread_fd from array
-
-void EpollServer::voidThread(){
-	close(threads_fd[lastth]);
-
-	for(int i=lastth; i+1 < nthreads; i++){
-		threads_fd[i] = threads_fd[i+1];
-	}
-
-	nthreads--;
-
-	if(lastth >=nthreads)
-		lastth = 0;
-}*/

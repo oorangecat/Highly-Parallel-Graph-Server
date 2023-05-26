@@ -6,6 +6,8 @@
 #define SERVER_NETWORKER_HH
 
 #include <vector>
+#include <signal.h>
+
 #include "Epoll/EpollInstance.hh"
 #include "Epoll/EpollConnection.hh"
 #include "Epoll/EpollIncoming.hh"

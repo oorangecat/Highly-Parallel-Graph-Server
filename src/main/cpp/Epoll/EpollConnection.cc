@@ -22,10 +22,11 @@ EpollConnection::EpollConnection(conn_t *cfd, Graph *g) {
 	this->graph = g;
 }
 
-EpollConnection::~EpollConnection() noexcept {
+EpollConnection::~EpollConnection()  {
 	close(this->cnn->cfd);
 	delete(this->cnn);
 }
+
 int type=0;
 
 bool isFdValid(int fd) {
@@ -76,7 +77,6 @@ bool EpollConnection::handleEvent(uint32_t events) {
 	int count;
 
 	if ((events & EPOLLERR) || (events & EPOLLHUP) || !(events & EPOLLIN)) {
-		delete(this);
 		return false;
 
 	} else {
@@ -132,6 +132,7 @@ bool EpollConnection::handleEvent(uint32_t events) {
 		Response response;
 
 		if (req.has_walk()) {                  //WALK ROUTE
+
 #if DATADEBUG == true
 			printf("Received WALK on connection %d\n", this->cnn->cfd);
 			fflush(stdout);

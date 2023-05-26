@@ -9,7 +9,7 @@ srcs = ['main.cpp', 'proto/locations.pb.cc','Epoll/MessageQueue/MessageQueue.hh'
            'Epoll/EpollEntry.cc', 'Graph/Graph.cc', 'Graph/Edge.cc', 'Graph/Node.cc', 'Graph/PointMap.cc',
            'Epoll/Connection.hh', 'NetWorker.cc']
 
-executable('server', srcs, cpp_args: '-O2',
+executable('server', srcs, cpp_args: ['-O2','-g'],
   dependencies: [thread_dep, boost_dep, jsoncpp_dep, protobuf_dep]
 )
 

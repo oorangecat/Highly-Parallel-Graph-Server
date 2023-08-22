@@ -1,24 +1,8 @@
-### C++ Server Component
+# Highly Parallel Graph Server
 
-To build the C++ part of the project, install dependencies or use nix shell:
+In the context of calculating multiple shortest-paths on a common graph, this server allows to a wide number of clients to:
+- Connect in paralle to the server
+- Send multiple Protobuf messages, both for contributing to the graph, adding walks and locations, and requesting a one-to-one or a one-to-all calculation
+- Clear the graph
 
-	nix-shell
-
-
-Then generate resources for protobuf (execute from project root folder):
-
-    protoc -I=src/main/proto --cpp_out=src/main/cpp/proto src/main/proto/locations.proto
-
-
-Then build the project with meson:
-
-	meson setup builddir
-	meson compile -C builddir
-
-And finally run the project:
-
-	./builddir/src/main/cpp/server <port> <format>
-
-for example:
-
-    ./builddir/src/main/cpp/server 
+This is a solution for the Semestral Work of the Efficient Software course in CVUT, Prague
